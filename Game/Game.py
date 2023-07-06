@@ -1,6 +1,6 @@
 import pygame
 from enemy import Enemy
-
+from enemy_spawner import EnemySpawner
 
 class TowerDefenseGame:
     def __init__(self):
@@ -21,7 +21,8 @@ class TowerDefenseGame:
 
         self.grid = [["" for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
 
-        self.enemies = [Enemy(0, 0, self.CELL_SIZE // 2, self.CELL_SIZE // 2, self.GREEN, 2, self.CELL_SIZE)]
+        self.enemies = []
+        self.enemy_spawner = EnemySpawner(Enemy, 5, 1000, self.CELL_SIZE)
 
 
     def draw_grid(self):
@@ -43,6 +44,14 @@ class TowerDefenseGame:
     def update_enemies(self):
         for enemy in self.enemies:
             enemy.move()
+
+            # Remove enemies that have moved off the screen or reached the end
+        self.enemies = [enemy for enemy in self.enemies if 0 <= enemy.cell_y < self.GRID_SIZE]
+
+        # Spawn new enemies
+        new_enemy = self.enemy_spawner.spawn()
+        if new_enemy is not None:
+            self.enemies.append(new_enemy)
 
         # Remove enemies that have moved off the screen or reached the end
         self.enemies = [enemy for enemy in self.enemies if 0 <= enemy.cell_y < self.GRID_SIZE-1]
