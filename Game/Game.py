@@ -24,10 +24,13 @@ class TowerDefenseGame:
 
         self.to_be_placed = {'tower': 1, 'wall': 4}
         self.enemies = []
-        self.enemy_spawner = []
+        self.enemy_spawner = None  # Make this None initially
 
         self.towers = []
         self.walls = []
+
+        self.start_point = (0, 0)
+        self.end_point = (0, 10)
 
 
     def draw_grid(self):
@@ -50,25 +53,16 @@ class TowerDefenseGame:
         for enemy in self.enemies:
             enemy.move()
 
-            # Remove enemies that have moved off the screen or reached the end
-        self.enemies = [enemy for enemy in self.enemies if 0 <= enemy.cell_y < self.GRID_SIZE]
+        self.enemies = [enemy for enemy in self.enemies if not (enemy.cell_x, enemy.cell_y) == self.end_point]
 
-        # Spawn new enemies if all objects have been placed
         if all(value == 0 for value in self.to_be_placed.values()) and not self.wave_is_on_going:
-            self.enemy_spawner = EnemySpawner(enemy_type=Enemy, enemy_number=10, enemy_frequency=500, cell_size=self.CELL_SIZE)
+            self.enemy_spawner = EnemySpawner(enemy_type=Enemy, start_point=self.start_point, end_point=self.end_point, enemy_number=10, enemy_frequency=500, cell_size=self.CELL_SIZE)
             self.wave_is_on_going = True
 
-        # Spawn new enemies
         if self.wave_is_on_going:
             new_enemy = self.enemy_spawner.spawn()
             if new_enemy is not None:
                 self.enemies.append(new_enemy)
-
-        # Remove enemies that have moved off the screen or reached the end
-        self.enemies = [enemy for enemy in self.enemies if 0 <= enemy.cell_y < self.GRID_SIZE-1]
-
-        # Remove enemies that have moved off the screen
-        self.enemies = [enemy for enemy in self.enemies if 0 <= enemy.y <= self.HEIGHT]
 
     def main(self):
         clock = pygame.time.Clock()
