@@ -6,6 +6,7 @@ class TowerDefenseGame:
     def __init__(self):
         pygame.init()
 
+        self.wave_is_on_going = False
         self.WIDTH, self.HEIGHT = 800, 800
         self.GRID_SIZE = 10
         self.CELL_SIZE = self.WIDTH // self.GRID_SIZE
@@ -21,8 +22,12 @@ class TowerDefenseGame:
 
         self.grid = [["" for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
 
+        self.to_be_placed = {'tower': 1, 'wall': 4}
         self.enemies = []
-        self.enemy_spawner = EnemySpawner(Enemy, 5, 1000, self.CELL_SIZE)
+        self.enemy_spawner = []
+
+        self.towers = []
+        self.walls = []
 
 
     def draw_grid(self):
@@ -30,7 +35,7 @@ class TowerDefenseGame:
         for i in range(self.GRID_SIZE):
             for j in range(self.GRID_SIZE):
                 rect = pygame.Rect(j * self.CELL_SIZE, i * self.CELL_SIZE, self.CELL_SIZE, self.CELL_SIZE)
-                if self.grid[i][j] == "tower":
+                if self.grid[i][j] == "tower" and (i != 0 or i != self.CELL_SIZE):
                     pygame.draw.rect(self.WIN, self.RED, rect)
                 elif self.grid[i][j] == "wall":
                     pygame.draw.rect(self.WIN, self.BLUE, rect)
@@ -48,10 +53,16 @@ class TowerDefenseGame:
             # Remove enemies that have moved off the screen or reached the end
         self.enemies = [enemy for enemy in self.enemies if 0 <= enemy.cell_y < self.GRID_SIZE]
 
+        # Spawn new enemies if all objects have been placed
+        if all(value == 0 for value in self.to_be_placed.values()) and not self.wave_is_on_going:
+            self.enemy_spawner = EnemySpawner(enemy_type=Enemy, enemy_number=10, enemy_frequency=500, cell_size=self.CELL_SIZE)
+            self.wave_is_on_going = True
+
         # Spawn new enemies
-        new_enemy = self.enemy_spawner.spawn()
-        if new_enemy is not None:
-            self.enemies.append(new_enemy)
+        if self.wave_is_on_going:
+            new_enemy = self.enemy_spawner.spawn()
+            if new_enemy is not None:
+                self.enemies.append(new_enemy)
 
         # Remove enemies that have moved off the screen or reached the end
         self.enemies = [enemy for enemy in self.enemies if 0 <= enemy.cell_y < self.GRID_SIZE-1]
@@ -71,14 +82,18 @@ class TowerDefenseGame:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     x, y = pygame.mouse.get_pos()
                     i, j = y // self.CELL_SIZE, x // self.CELL_SIZE
-                    if event.button == 1:
-                        if all(self.grid[i + di][j + dj] == "" for di in range(-1, 1) for dj in range(-1, 1)):
-                            for di in range(-1, 1):
-                                for dj in range(-1, 1):
+                    if event.button == 1 and self.to_be_placed['tower'] > 0:
+                        if all(self.grid[i + di][j + dj] == "" for di in range(2) for dj in range(2)):
+                            for di in range(2):
+                                for dj in range(2):
                                     self.grid[i + di][j + dj] = "tower"
-                    elif event.button == 3:
+                            self.towers.append((j * self.CELL_SIZE, i * self.CELL_SIZE))  # add this line
+                            self.to_be_placed['tower'] -= 1
+                    elif event.button == 3 and self.to_be_placed['wall'] > 0:
                         if self.grid[i][j] == "":
                             self.grid[i][j] = "wall"
+                            self.walls.append((j * self.CELL_SIZE, i * self.CELL_SIZE))  # add this line
+                            self.to_be_placed['wall'] -= 1
 
             self.update_enemies()
             self.draw_grid()

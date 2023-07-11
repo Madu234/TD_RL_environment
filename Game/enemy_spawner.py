@@ -17,6 +17,6 @@ class EnemySpawner:
         if self.spawned_enemies < self.enemy_number and current_time - self.last_spawn_time >= self.enemy_frequency:
             self.last_spawn_time = current_time
             self.spawned_enemies += 1
-            return Enemy(0, 0, self.cell_size // 2, self.cell_size // 2, (0, 255, 0), 10, self.cell_size)
+            return Enemy(0, 0, self.cell_size // 2, self.cell_size // 2, color=(0, 255, 0), speed=3, cell_size=self.cell_size)
         else:
             return None
