@@ -1,6 +1,19 @@
+class Node:
+    def __init__(self, parent, position):
+        self.parent = parent
+        self.position = position
+
+        self.g = 0
+        self.h = 0
+        self.f = 0
+
+    def __eq__(self, other):
+        return self.position == other.position
+
 class CalculateOptimalPath:
     def __init__(self, maze, start, end):
-        self.maze = maze
+        print(maze)
+        self.maze = [list(row) for row in zip(*maze)]
         self.start = Node(None, start)
         self.end = Node(None, end)
 
@@ -37,7 +50,8 @@ class CalculateOptimalPath:
                         len(self.maze[len(self.maze) - 1]) - 1) or node_position[1] < 0:
                     continue
 
-                if self.maze[node_position[0]][node_position[1]] != "":
+                # Change this line to account for impassable cells
+                if self.maze[node_position[0]][node_position[1]] != '':
                     continue
 
                 new_node = Node(current_node, node_position)
