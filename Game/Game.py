@@ -1,15 +1,16 @@
 import pygame
 from enemy import Enemy
 from enemy_spawner import EnemySpawner
-
+from calculate_optimal_path import CalculateOptimalPath
 class TowerDefenseGame:
     def __init__(self):
         pygame.init()
 
         self.wave_is_on_going = False
         self.WIDTH, self.HEIGHT = 800, 800
-        self.GRID_SIZE = 10
+        self.GRID_SIZE = 20
         self.CELL_SIZE = self.WIDTH // self.GRID_SIZE
+        self.enemy_health = 100
         self.FPS = 60
 
         self.WHITE = (255, 255, 255)
@@ -22,7 +23,7 @@ class TowerDefenseGame:
 
         self.grid = [["" for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
 
-        self.to_be_placed = {'tower': 1, 'wall': 4}
+        self.to_be_placed = {'tower': 1, 'wall': 10}
         self.enemies = []
         self.enemy_spawner = None  # Make this None initially
 
@@ -30,7 +31,7 @@ class TowerDefenseGame:
         self.walls = []
 
         self.start_point = (0, 0)
-        self.end_point = (0, 10)
+        self.end_point = (0, 19)
 
 
     def draw_grid(self):
@@ -56,7 +57,12 @@ class TowerDefenseGame:
         self.enemies = [enemy for enemy in self.enemies if not (enemy.cell_x, enemy.cell_y) == self.end_point]
 
         if all(value == 0 for value in self.to_be_placed.values()) and not self.wave_is_on_going:
-            self.enemy_spawner = EnemySpawner(enemy_type=Enemy, start_point=self.start_point, end_point=self.end_point, enemy_number=10, enemy_frequency=500, cell_size=self.CELL_SIZE)
+            path_finder = CalculateOptimalPath(self.grid, self.start_point, self.end_point)
+            optimal_path = path_finder.calculate()
+            print("Optimal path:", optimal_path)
+            self.enemy_spawner = EnemySpawner(path=optimal_path,enemy_type=Enemy, start_point=self.start_point,
+                                              end_point=self.end_point, enemy_number=10, enemy_frequency=500,
+                                              cell_size=self.CELL_SIZE, initial_health=self.enemy_health)
             self.wave_is_on_going = True
 
         if self.wave_is_on_going:
