@@ -1,5 +1,6 @@
 import pygame
 from enemy import Enemy
+from tower import Tower
 from enemy_spawner import EnemySpawner
 from calculate_optimal_path import CalculateOptimalPath
 class TowerDefenseGame:
@@ -23,7 +24,7 @@ class TowerDefenseGame:
 
         self.grid = [["" for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
 
-        self.to_be_placed = {'tower': 1, 'wall': 10}
+        self.to_be_placed = {'tower': 4, 'wall': 10}
         self.enemies = []
         self.enemy_spawner = None  # Make this None initially
 
@@ -53,6 +54,9 @@ class TowerDefenseGame:
     def update_enemies(self):
         for enemy in self.enemies:
             enemy.move()
+            if enemy.is_dead():
+                self.enemies.remove(enemy)
+                continue  # Skip the rest of the loop for this enemy
 
         self.enemies = [enemy for enemy in self.enemies if not (enemy.cell_x, enemy.cell_y) == self.end_point]
 
@@ -69,6 +73,19 @@ class TowerDefenseGame:
             new_enemy = self.enemy_spawner.spawn()
             if new_enemy is not None:
                 self.enemies.append(new_enemy)
+
+    def update_towers_game(self):
+        for tower in self.towers:
+            tower.update_towers(self.enemies)
+
+    def draw_towers(self):
+        for tower in self.towers:
+            # Draw the tower base (assuming it's a simple rectangle here)
+            pygame.draw.rect(self.WIN, tower.color, (
+            tower.x - self.CELL_SIZE // 2, tower.y - self.CELL_SIZE // 2, self.CELL_SIZE, self.CELL_SIZE))
+            # Draw the tower's projectiles
+            for projectile in tower.projectiles:
+                projectile.draw(self.WIN)
 
     def main(self):
         clock = pygame.time.Clock()
@@ -87,18 +104,27 @@ class TowerDefenseGame:
                             for di in range(2):
                                 for dj in range(2):
                                     self.grid[i + di][j + dj] = "tower"
-                            self.towers.append((j * self.CELL_SIZE, i * self.CELL_SIZE))  # add this line
+                            tower_x = j * self.CELL_SIZE + self.CELL_SIZE // 2
+                            tower_y = i * self.CELL_SIZE + self.CELL_SIZE // 2
+                            new_tower = Tower(tower_x, tower_y, range=100, color=self.RED,
+                                              projectile_speed=5, projectile_damage=10, fire_rate=10)  # Adjust parameters as needed
+                            self.towers.append(new_tower)
                             self.to_be_placed['tower'] -= 1
                     elif event.button == 3 and self.to_be_placed['wall'] > 0:
                         if self.grid[i][j] == "":
                             self.grid[i][j] = "wall"
                             self.walls.append((j * self.CELL_SIZE, i * self.CELL_SIZE))  # add this line
                             self.to_be_placed['wall'] -= 1
-
+                    if not CalculateOptimalPath(self.grid, self.start_point, self.end_point).calculate():
+                        print("Not a valid path")
+                        return 0
+            self.update_towers_game()  # Make sure to call this in your main loop
             self.update_enemies()
             self.draw_grid()
             self.draw_enemies()
+            self.draw_towers()
 
             pygame.display.update()
 
         pygame.quit()
+
