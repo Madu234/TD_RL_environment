@@ -1,7 +1,7 @@
 import pygame
 
 class Enemy:
-    def __init__(self, path, width, height, color, speed, cell_size):
+    def __init__(self, path, width, height, color, speed, cell_size, hp):
         self.path = path
         self.current_target = 0
 
@@ -17,6 +17,11 @@ class Enemy:
         # Compute the pixel coordinates
         self.x = self.cell_x * cell_size + cell_size // 2
         self.y = self.cell_y * cell_size + cell_size // 2
+
+        self.hp = hp  # Initialize HP
+
+    def is_alive(self):
+        return self.hp > 0
 
     def draw(self, win):
         pygame.draw.rect(win, self.color, (self.x - self.width // 2, self.y - self.height // 2, self.width, self.height))

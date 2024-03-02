@@ -12,7 +12,7 @@ class Node:
 
 class CalculateOptimalPath:
     def __init__(self, maze, start, end):
-        print(maze)
+        # print(maze)
         self.maze = [list(row) for row in zip(*maze)]
         self.start = Node(None, start)
         self.end = Node(None, end)
@@ -58,17 +58,16 @@ class CalculateOptimalPath:
                 children.append(new_node)
 
             for child in children:
-                for closed_child in closed_list:
-                    if child == closed_child:
-                        continue
+                # Add child to open list if it's not in the closed list
+                if child not in closed_list:
+                    child.g = current_node.g + 1
+                    child.h = ((child.position[0] - self.end.position[0]) ** 2) + ((child.position[1] - self.end.position[1]) ** 2)
+                    child.f = child.g + child.h
 
-                child.g = current_node.g + 1
-                child.h = ((child.position[0] - self.end.position[0]) ** 2) + ((child.position[1] - self.end.position[1]) ** 2)
-                child.f = child.g + child.h
+                    # Add child to open list if it doesn't exist or if it has a better g (cost) value
+                    if not any(open_node.position == child.position and open_node.g <= child.g for open_node in open_list):
+                        open_list.append(child)
 
-                for open_node in open_list:
-                    if child == open_node and child.g > open_node.g:
-                        continue
-
-                open_list.append(child)
+            # Print the open list
+            # print(f"Open List: {[node.position for node in open_list]}")
         return None

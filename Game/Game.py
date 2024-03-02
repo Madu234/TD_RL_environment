@@ -2,6 +2,8 @@ import pygame
 from enemy import Enemy
 from enemy_spawner import EnemySpawner
 from calculate_optimal_path import CalculateOptimalPath
+from tower import Tower
+
 class TowerDefenseGame:
     def __init__(self):
         pygame.init()
@@ -22,7 +24,7 @@ class TowerDefenseGame:
 
         self.grid = [["" for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
 
-        self.to_be_placed = {'tower': 1, 'wall': 4}
+        self.to_be_placed = {'tower': 3, 'wall': 4}
         self.enemies = []
         self.enemy_spawner = None  # Make this None initially
 
@@ -49,16 +51,25 @@ class TowerDefenseGame:
         for enemy in self.enemies:
             enemy.draw(self.WIN)
 
+    def draw_projectiles(self):
+        for tower in self.towers:
+            for projectile in tower.projectiles:
+                projectile.draw(self.WIN)
+
     def update_enemies(self):
         for enemy in self.enemies:
             enemy.move()
 
+        self.enemies = [enemy for enemy in self.enemies if enemy.is_alive()]
         self.enemies = [enemy for enemy in self.enemies if not (enemy.cell_x, enemy.cell_y) == self.end_point]
 
         if all(value == 0 for value in self.to_be_placed.values()) and not self.wave_is_on_going:
             path_finder = CalculateOptimalPath(self.grid, self.start_point, self.end_point)
             optimal_path = path_finder.calculate()
-            print("Optimal path:", optimal_path)
+            # Check if optimal_path was not found
+            if not optimal_path:
+                raise ValueError("Optimal path not found. Ensure that the path can be calculated given the grid, start, and end points.")
+            # print("Optimal path:", optimal_path)
             self.enemy_spawner = EnemySpawner(path=optimal_path,enemy_type=Enemy, start_point=self.start_point, end_point=self.end_point, enemy_number=10, enemy_frequency=500, cell_size=self.CELL_SIZE)
             self.wave_is_on_going = True
 
@@ -66,6 +77,44 @@ class TowerDefenseGame:
             new_enemy = self.enemy_spawner.spawn()
             if new_enemy is not None:
                 self.enemies.append(new_enemy)
+
+    def update_towers(self):
+        index = 0
+        for tower in self.towers:
+            # print(index)
+            index = index + 1
+            tower.find_target(self.enemies)
+            tower.shoot()
+            tower.update_projectiles()
+            # tower.draw(self.WIN)
+
+    def place_structure(self, x, y, type):
+        i, j = y // self.CELL_SIZE, x // self.CELL_SIZE
+        if type == 1 and self.to_be_placed['tower'] > 0:
+            if all(self.grid[i + di][j + dj] == "" for di in range(2) for dj in range(2)):
+                for di in range(2):
+                    for dj in range(2):
+                        self.grid[i + di][j + dj] = "tower"
+                self.towers.append(Tower((x, y), range=100, attack_speed=4))  # Create a new Tower instance
+                self.to_be_placed['tower'] -= 1
+            elif type == 3 and self.to_be_placed['wall'] > 0:
+                if self.grid[i][j] == "":
+                    self.grid[i][j] = "wall"
+                    self.walls.append((j * self.CELL_SIZE, i * self.CELL_SIZE))  # add this line
+                    self.to_be_placed['wall'] -= 1
+
+    def calculate_reward(self):
+        # Assuming you've updated your game logic to calculate
+        # optimal_path_length elsewhere (e.g., within update_enemies or similar)
+        path_finder = CalculateOptimalPath(self.grid, self.start_point, self.end_point)
+        optimal_path_length = len(path_finder.calculate())
+
+        # You can normalize or scale this reward if you'd like
+        reward = optimal_path_length
+
+        return reward
+
+
 
     def main(self):
         clock = pygame.time.Clock()
@@ -84,18 +133,21 @@ class TowerDefenseGame:
                             for di in range(2):
                                 for dj in range(2):
                                     self.grid[i + di][j + dj] = "tower"
-                            self.towers.append((j * self.CELL_SIZE, i * self.CELL_SIZE))  # add this line
+                            self.towers.append(Tower((j, i), self.CELL_SIZE, range=100, attack_speed=4))  # Create a new Tower instance
                             self.to_be_placed['tower'] -= 1
                     elif event.button == 3 and self.to_be_placed['wall'] > 0:
                         if self.grid[i][j] == "":
                             self.grid[i][j] = "wall"
                             self.walls.append((j * self.CELL_SIZE, i * self.CELL_SIZE))  # add this line
                             self.to_be_placed['wall'] -= 1
-
+            self.update_towers()
             self.update_enemies()
             self.draw_grid()
             self.draw_enemies()
+            self.draw_projectiles()
 
             pygame.display.update()
 
         pygame.quit()
+
+
