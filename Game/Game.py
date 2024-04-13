@@ -88,20 +88,40 @@ class TowerDefenseGame:
             tower.update_projectiles()
             # tower.draw(self.WIN)
 
-    def place_structure(self, x, y, type):
+    def place_structure_pixels(self, x, y, type):
         i, j = y // self.CELL_SIZE, x // self.CELL_SIZE
+        print(type)
+        print(f"i={i}, j={j}")
         if type == 1 and self.to_be_placed['tower'] > 0:
             if all(self.grid[i + di][j + dj] == "" for di in range(2) for dj in range(2)):
                 for di in range(2):
                     for dj in range(2):
                         self.grid[i + di][j + dj] = "tower"
-                self.towers.append(Tower((x, y), range=100, attack_speed=4))  # Create a new Tower instance
+                self.towers.append(Tower((x, y), self.CELL_SIZE, range=100, attack_speed=4))  # Create a new Tower instance
                 self.to_be_placed['tower'] -= 1
-            elif type == 3 and self.to_be_placed['wall'] > 0:
-                if self.grid[i][j] == "":
-                    self.grid[i][j] = "wall"
-                    self.walls.append((j * self.CELL_SIZE, i * self.CELL_SIZE))  # add this line
-                    self.to_be_placed['wall'] -= 1
+        elif type == 3 and self.to_be_placed['wall'] > 0:
+            if self.grid[i][j] == "":
+                self.grid[i][j] = "wall"
+                self.walls.append((j * self.CELL_SIZE, i * self.CELL_SIZE))  # add this line
+                self.to_be_placed['wall'] -= 1
+        print(self.grid)
+
+    def place_structure_index(self, i, j, type):
+        x, y = i // self.CELL_SIZE, j // self.CELL_SIZE
+        if type == 1 and self.to_be_placed['tower'] > 0:
+            if all(self.grid[i + di][j + dj] == "" for di in range(2) for dj in range(2)):
+                for di in range(2):
+                    for dj in range(2):
+                        self.grid[i + di][j + dj] = "tower"
+                self.towers.append(Tower((x, y), self.CELL_SIZE, range=100, attack_speed=4))  # Create a new Tower instance
+                self.to_be_placed['tower'] -= 1
+        elif type == 3 and self.to_be_placed['wall'] > 0:
+            if self.grid[i][j] == "":
+                self.grid[i][j] = "wall"
+                self.walls.append((j * self.CELL_SIZE, i * self.CELL_SIZE))  # add this line
+                self.to_be_placed['wall'] -= 1
+        print(self.grid)
+    
 
     def calculate_reward(self):
         # Assuming you've updated your game logic to calculate
@@ -114,12 +134,24 @@ class TowerDefenseGame:
 
         return reward
 
+    def load_map(self):
+        file = open("maps.txt","r")
+        for x_index, line in enumerate(file):
+            line = line.split(" ")
+            for y_index,position in enumerate(line):
+                type = position[0]
+                if type != '0':
+                    print(x_index,y_index)
+                    self.place_structure_index(x_index, y_index, 1)
+                    # do nothing
+            print(line)
 
 
     def main(self):
         clock = pygame.time.Clock()
         run = True
-
+        self.load_map()
+        # self.place_structure(1, 1, 3)
         while run:
             clock.tick(self.FPS)
             for event in pygame.event.get():
