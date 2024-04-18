@@ -1,10 +1,10 @@
 import pygame
 
 class Enemy:
-    def __init__(self, path, width, height, color, speed, cell_size, hp):
+    def __init__(self, path, width, height, color, speed, cell_size, hp, armor = 0):
         self.path = path
         self.current_target = 0
-
+        self.armor = armor
         self.cell_x, self.cell_y = self.path[self.current_target]
         self.end_point = path[-1]
 
@@ -22,6 +22,16 @@ class Enemy:
 
     def is_alive(self):
         return self.hp > 0
+
+    def take_damage(self, damage):
+        if (damage > self.armor):
+            self.hp = self.hp - (damage - self.armor)
+        else:
+            # Take 0 damage
+            pass
+
+    def shred_armor(self, shred):
+        self.armor = self.armor - shred
 
     def draw(self, win):
         pygame.draw.rect(win, self.color, (self.x - self.width // 2, self.y - self.height // 2, self.width, self.height))
@@ -49,6 +59,7 @@ class Enemy:
 
         # Check if reached target cell
         if self.cell_x == target_x and self.cell_y == target_y:
+            # print (f"{self.cell_x} and {self.cell_y}")
             self.current_target += 1
             if self.current_target == len(self.path) - 1:
                 return  # Enemy has reached the final destination, you may take any required action

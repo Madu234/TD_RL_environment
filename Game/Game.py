@@ -19,6 +19,7 @@ class TowerDefenseGame:
         self.RED = (255, 0, 0)
         self.BLUE = (0, 0, 255)
         self.GREEN = (0, 255, 0)
+        self.VIOLET = (127,0,255)
 
         self.WIN = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
 
@@ -33,6 +34,9 @@ class TowerDefenseGame:
 
         self.start_point = (0, 0)
         self.end_point = (0, 19)
+        self.grid[self.start_point[0]][self.start_point[1]] = "start"
+        self.grid[self.end_point[0]][self.end_point[1]] = "finish"
+
 
 
     def draw_grid(self):
@@ -44,6 +48,10 @@ class TowerDefenseGame:
                     pygame.draw.rect(self.WIN, self.RED, rect)
                 elif self.grid[i][j] == "wall":
                     pygame.draw.rect(self.WIN, self.BLUE, rect)
+                elif self.grid[i][j] == "obstacle":
+                    pygame.draw.rect(self.WIN, self.GREY, rect)
+                elif self.grid[i][j] == "start" or self.grid[i][j] == "finish":
+                    pygame.draw.rect(self.WIN, self.VIOLET, rect)
                 else:
                     pygame.draw.rect(self.WIN, self.GREY, rect, 1)
 
@@ -90,8 +98,8 @@ class TowerDefenseGame:
 
     def place_structure_pixels(self, x, y, type):
         i, j = y // self.CELL_SIZE, x // self.CELL_SIZE
-        print(type)
-        print(f"i={i}, j={j}")
+        # print(type)
+        # print(f"i={i}, j={j}")
         if type == 1 and self.to_be_placed['tower'] > 0:
             if all(self.grid[i + di][j + dj] == "" for di in range(2) for dj in range(2)):
                 for di in range(2):
@@ -104,23 +112,25 @@ class TowerDefenseGame:
                 self.grid[i][j] = "wall"
                 self.walls.append((j * self.CELL_SIZE, i * self.CELL_SIZE))  # add this line
                 self.to_be_placed['wall'] -= 1
-        print(self.grid)
+        # print(self.grid)
 
     def place_structure_index(self, i, j, type):
-        x, y = i // self.CELL_SIZE, j // self.CELL_SIZE
+        #print(f"place_structure_index called: i={i}, j={j}, type={type}")
         if type == 1 and self.to_be_placed['tower'] > 0:
             if all(self.grid[i + di][j + dj] == "" for di in range(2) for dj in range(2)):
                 for di in range(2):
                     for dj in range(2):
                         self.grid[i + di][j + dj] = "tower"
-                self.towers.append(Tower((x, y), self.CELL_SIZE, range=100, attack_speed=4))  # Create a new Tower instance
+                self.towers.append(Tower((i, j), self.CELL_SIZE, range=100, attack_speed=4))  # Create a new Tower instance
                 self.to_be_placed['tower'] -= 1
         elif type == 3 and self.to_be_placed['wall'] > 0:
             if self.grid[i][j] == "":
                 self.grid[i][j] = "wall"
                 self.walls.append((j * self.CELL_SIZE, i * self.CELL_SIZE))  # add this line
                 self.to_be_placed['wall'] -= 1
-        print(self.grid)
+        else:
+            self.grid[i][j] = "obstacle"
+        # print(self.grid)
     
 
     def calculate_reward(self):
@@ -135,16 +145,24 @@ class TowerDefenseGame:
         return reward
 
     def load_map(self):
-        file = open("maps.txt","r")
+        self.grid = [["" for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
+        file = open("map_line.txt","r")
         for x_index, line in enumerate(file):
             line = line.split(" ")
             for y_index,position in enumerate(line):
                 type = position[0]
-                if type != '0':
-                    print(x_index,y_index)
-                    self.place_structure_index(x_index, y_index, 1)
+                if type == 'S' or type == 's':
+                    self.start_point = (x_index, y_index)
+                    self.grid[self.start_point[0]][self.start_point[1]] = "start"
+                elif type == 'E' or type == 'e':
+                    self.end_point = (x_index, y_index)
+                    self.grid[self.end_point[0]][self.end_point[1]] = "finish"
+                elif type != '0':
+                    # print(x_index,y_index)
+                    self.place_structure_index(x_index, y_index, int(type))
                     # do nothing
-            print(line)
+                
+            # print(line)
 
 
     def main(self):
