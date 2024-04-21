@@ -25,7 +25,7 @@ class TowerDefenseGame:
 
         self.grid = [["" for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
 
-        self.to_be_placed = {'tower': 3, 'wall': 4}
+        self.to_be_placed = {'tower': 4, 'wall': 0}
         self.enemies = []
         self.enemy_spawner = None  # Make this None initially
 
@@ -73,11 +73,12 @@ class TowerDefenseGame:
 
         if all(value == 0 for value in self.to_be_placed.values()) and not self.wave_is_on_going:
             path_finder = CalculateOptimalPath(self.grid, self.start_point, self.end_point)
+            print (self.end_point)
             optimal_path = path_finder.calculate()
             # Check if optimal_path was not found
             if not optimal_path:
                 raise ValueError("Optimal path not found. Ensure that the path can be calculated given the grid, start, and end points.")
-            # print("Optimal path:", optimal_path)
+            print("Optimal path:", optimal_path)
             self.enemy_spawner = EnemySpawner(path=optimal_path,enemy_type=Enemy, start_point=self.start_point, end_point=self.end_point, enemy_number=10, enemy_frequency=500, cell_size=self.CELL_SIZE)
             self.wave_is_on_going = True
 
@@ -136,7 +137,7 @@ class TowerDefenseGame:
     def calculate_reward(self):
         # Assuming you've updated your game logic to calculate
         # optimal_path_length elsewhere (e.g., within update_enemies or similar)
-        path_finder = CalculateOptimalPath(self.grid, self.start_point, self.end_point)
+        path_finder = CalculateOptimalPath(self.grid, self.start_point, [self.end_point[0],self.end_point[1]])
         optimal_path_length = len(path_finder.calculate())
 
         # You can normalize or scale this reward if you'd like

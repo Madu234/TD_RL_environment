@@ -1,11 +1,11 @@
 import pygame
 
 class Enemy:
-    def __init__(self, path, width, height, color, speed, cell_size, hp, armor = 0):
+    def __init__(self, path, width, height, color, speed, cell_size, hp, armor = 5):
         self.path = path
         self.current_target = 0
         self.armor = armor
-        self.cell_x, self.cell_y = self.path[self.current_target]
+        self.cell_y, self.cell_x = self.path[self.current_target]
         self.end_point = path[-1]
 
         self.width = width

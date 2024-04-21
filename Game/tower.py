@@ -2,10 +2,11 @@ import pygame
 import math
 
 class Projectile:
-    def __init__(self, start_pos, target, damage):
+    def __init__(self, start_pos, target, damage, armor_shred = 0):
         self.x, self.y = start_pos
         self.target = target
         self.damage = damage
+        self.armor_shred = armor_shred
         self.speed = 5  # You can adjust this value
         self.color = (0, 0, 0)  # Projectile color - currently black
         self.radius = 5  # Radius of the projectile circle
@@ -22,7 +23,8 @@ class Projectile:
 
         # Check if the projectile has hit the target
         if math.hypot(self.target.x - self.x, self.target.y - self.y) < self.radius:
-            self.target.hp -= self.damage
+            self.target.shred_armor(self.armor_shred)
+            self.target.take_damage(self.damage)           
             return True  # Indicates that the projectile hit the target
 
         return False  # Projectile has not hit the target yet
@@ -43,6 +45,10 @@ class Tower:
         self.width = 20  # Width of the tower
         self.height = 20  # Height of the tower
         self.damage = 10
+
+        # For targeting priotization
+        # self.armor_threshold
+
         self.last_shot_time = pygame.time.get_ticks()
 
     def center_position(self):
