@@ -73,13 +73,13 @@ class TowerDefenseGame:
 
         if all(value == 0 for value in self.to_be_placed.values()) and not self.wave_is_on_going:
             path_finder = CalculateOptimalPath(self.grid, self.start_point, self.end_point)
-            print (self.end_point)
+            # print (self.end_point)
             optimal_path = path_finder.calculate()
             # Check if optimal_path was not found
             if not optimal_path:
                 raise ValueError("Optimal path not found. Ensure that the path can be calculated given the grid, start, and end points.")
-            print("Optimal path:", optimal_path)
-            self.enemy_spawner = EnemySpawner(path=optimal_path,enemy_type=Enemy, start_point=self.start_point, end_point=self.end_point, enemy_number=10, enemy_frequency=500, cell_size=self.CELL_SIZE)
+            # print("Optimal path:", optimal_path)
+            self.enemy_spawner = EnemySpawner(path=optimal_path,enemy_type=2, start_point=self.start_point, end_point=self.end_point, enemy_number=10, enemy_frequency=500, cell_size=self.CELL_SIZE)
             self.wave_is_on_going = True
 
         if self.wave_is_on_going:
@@ -147,7 +147,7 @@ class TowerDefenseGame:
 
     def load_map(self):
         self.grid = [["" for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
-        file = open("map_line.txt","r")
+        file = open("map_empty.txt","r")
         for x_index, line in enumerate(file):
             line = line.split(" ")
             for y_index,position in enumerate(line):

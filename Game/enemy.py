@@ -1,17 +1,31 @@
 import pygame
 
+
 class Enemy:
-    def __init__(self, path, width, height, color, speed, cell_size, hp, armor = 5):
-        self.path = path
-        self.current_target = 0
-        self.armor = armor
-        self.cell_y, self.cell_x = self.path[self.current_target]
-        self.end_point = path[-1]
+    def __init__(self, path, width, height, color, speed, cell_size, hp, armor = 0):
+        
+        characteristics = {}
+        if type == 1:
+            characteristics = normal_characteristics
+        elif type == 2:
+            characteristics = armored_characteristics
+
+        # Type variables
 
         self.width = width
         self.height = height
         self.color = color
         self.speed = speed
+        # self.type = enemy_type
+        self.armor = armor
+
+        # Path variables
+
+        self.path = path
+        self.current_target = 0
+        self.cell_y, self.cell_x = self.path[self.current_target]
+        self.end_point = path[-1]
+        
         self.cell_size = cell_size
 
         # Compute the pixel coordinates
@@ -62,6 +76,7 @@ class Enemy:
             # print (f"{self.cell_x} and {self.cell_y}")
             self.current_target += 1
             if self.current_target == len(self.path) - 1:
+                self.hp=0
                 return  # Enemy has reached the final destination, you may take any required action
 
         # Recompute the pixel coordinates

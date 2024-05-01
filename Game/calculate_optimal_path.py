@@ -12,10 +12,13 @@ class Node:
 
 class CalculateOptimalPath:
     def __init__(self, maze, start, end):
+        #print(end)
+        reversed_end = (end[1],end[0])
+        # print(reversed_end)
         # print(maze)
         self.maze = [list(row) for row in zip(*maze)]
         self.start = Node(None, start)
-        self.end = Node(None, end)
+        self.end = Node(None, reversed_end)
 
     def calculate(self):
         open_list = []
@@ -33,7 +36,7 @@ class CalculateOptimalPath:
 
             open_list.pop(current_index)
             closed_list.append(current_node)
-
+            # print(f"Current node: {current_node.position} End node: {self.end.position} ")
             if current_node == self.end:
                 path = []
                 current = current_node
@@ -49,7 +52,10 @@ class CalculateOptimalPath:
                 if node_position[0] > (len(self.maze) - 1) or node_position[0] < 0 or node_position[1] > (
                         len(self.maze[len(self.maze) - 1]) - 1) or node_position[1] < 0:
                     continue
-
+                
+                if self.maze[node_position[0]][node_position[1]] == 'finish':
+                    new_node = Node(current_node, node_position)
+                    children.append(new_node)
                 # Change this line to account for impassable cells
                 if self.maze[node_position[0]][node_position[1]] != '':
                     continue
@@ -63,7 +69,7 @@ class CalculateOptimalPath:
                     child.g = current_node.g + 1
                     child.h = ((child.position[0] - self.end.position[0]) ** 2) + ((child.position[1] - self.end.position[1]) ** 2)
                     child.f = child.g + child.h
-
+                    # print(f"child_pos: {child.position} and h:{child.h}")
                     # Add child to open list if it doesn't exist or if it has a better g (cost) value
                     if not any(open_node.position == child.position and open_node.g <= child.g for open_node in open_list):
                         open_list.append(child)
