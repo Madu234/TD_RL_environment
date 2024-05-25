@@ -1,17 +1,10 @@
 import pygame
-
+# from Game import TowerDefenseGame
 
 class Enemy:
     def __init__(self, path, width, height, color, speed, cell_size, hp, armor = 0):
         
-        characteristics = {}
-        if type == 1:
-            characteristics = normal_characteristics
-        elif type == 2:
-            characteristics = armored_characteristics
-
         # Type variables
-
         self.width = width
         self.height = height
         self.color = color
@@ -77,7 +70,8 @@ class Enemy:
             self.current_target += 1
             if self.current_target == len(self.path) - 1:
                 self.hp=0
-                return  # Enemy has reached the final destination, you may take any required action
+                # game.player_life = game.player_life - 1
+                return 1 # Enemy has reached the final destination, you may take any required action
 
         # Recompute the pixel coordinates
         self.x = self.cell_x * self.cell_size + self.cell_size // 2

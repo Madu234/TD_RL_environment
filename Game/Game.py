@@ -25,18 +25,22 @@ class TowerDefenseGame:
 
         self.grid = [["" for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
 
-        self.to_be_placed = {'tower': 4, 'wall': 0}
+        self.to_be_placed = {'tower': 4, 'wall': 2}
         self.enemies = []
         self.enemy_spawner = None  # Make this None initially
 
         self.towers = []
         self.walls = []
+        self.agent_life = 100
 
         self.start_point = (0, 0)
         self.end_point = (0, 19)
         self.grid[self.start_point[0]][self.start_point[1]] = "start"
         self.grid[self.end_point[0]][self.end_point[1]] = "finish"
 
+        
+    def agent_take_damage(self, damage):
+        self.agent_life = self.agent_life - damage
 
 
     def draw_grid(self):
@@ -66,7 +70,14 @@ class TowerDefenseGame:
 
     def update_enemies(self):
         for enemy in self.enemies:
-            enemy.move()
+            damage = enemy.move()
+            try:
+                if damage > 0:
+                    self.agent_life = self.agent_life - damage
+                    print(self.agent_life)
+            except:
+                pass
+                # Target not yet reached
 
         self.enemies = [enemy for enemy in self.enemies if enemy.is_alive()]
         self.enemies = [enemy for enemy in self.enemies if not (enemy.cell_x, enemy.cell_y) == self.end_point]
@@ -79,13 +90,17 @@ class TowerDefenseGame:
             if not optimal_path:
                 raise ValueError("Optimal path not found. Ensure that the path can be calculated given the grid, start, and end points.")
             # print("Optimal path:", optimal_path)
-            self.enemy_spawner = EnemySpawner(path=optimal_path,enemy_type=2, start_point=self.start_point, end_point=self.end_point, enemy_number=10, enemy_frequency=500, cell_size=self.CELL_SIZE)
+            self.enemy_spawner = EnemySpawner(path=optimal_path,enemy_type=1, start_point=self.start_point, end_point=self.end_point, enemy_number=10, enemy_frequency=500, cell_size=self.CELL_SIZE)
+            self.enemy_spawner2 = EnemySpawner(path=optimal_path,enemy_type=2, start_point=self.start_point, end_point=self.end_point, enemy_number=5, enemy_frequency=1000, cell_size=self.CELL_SIZE)
             self.wave_is_on_going = True
 
         if self.wave_is_on_going:
             new_enemy = self.enemy_spawner.spawn()
+            new_enemy2 = self.enemy_spawner2.spawn()
             if new_enemy is not None:
                 self.enemies.append(new_enemy)
+            if new_enemy2 is not None:
+                self.enemies.append(new_enemy2)
 
     def update_towers(self):
         index = 0
