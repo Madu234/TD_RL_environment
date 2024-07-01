@@ -43,3 +43,6 @@ class EnemySpawner:
             return Enemy(path = self.path, width = self.cell_size // 2, height = self.cell_size // 2, color=(0, 255, 0), speed=3, cell_size=self.cell_size, hp = 50)
         else:
             return None
+
+    def get_spawns_left(self):
+        return self.enemy_number - self.spawned_enemies

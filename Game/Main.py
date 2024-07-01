@@ -1,4 +1,4 @@
-from Game import TowerDefenseGame
+from Game_env import TowerDefenseGame
 
 if __name__ == "__main__":
     game = TowerDefenseGame()

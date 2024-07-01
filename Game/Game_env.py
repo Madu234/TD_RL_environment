@@ -3,6 +3,7 @@ from enemy import Enemy
 from enemy_spawner import EnemySpawner
 from calculate_optimal_path import CalculateOptimalPath
 from tower import Tower
+import pdb
 
 class TowerDefenseGame:
     def __init__(self):
@@ -25,9 +26,9 @@ class TowerDefenseGame:
 
         self.grid = [["" for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
 
-        self.to_be_placed = {'tower': 4, 'wall': 2}
+        self.to_be_placed = {'tower': 4, 'wall': 0}
         self.enemies = []
-        self.enemy_spawner = None  # Make this None initially
+        self.enemy_spawner = []  # Make this None initially
 
         self.towers = []
         self.walls = []
@@ -37,6 +38,15 @@ class TowerDefenseGame:
         self.end_point = (0, 19)
         self.grid[self.start_point[0]][self.start_point[1]] = "start"
         self.grid[self.end_point[0]][self.end_point[1]] = "finish"
+
+        self.waves = [
+            [(1, 2)],  # Wave 1: 10 light enemies
+            [(1, 10), (2, 5)],  # Wave 2: 10 light, 5 armored
+            [(1, 10), (2, 10)], # Wave 3: 10 light, 10 armored
+        ]
+        self.current_wave_index = 0
+        self.active_spawners = []
+
 
         
     def agent_take_damage(self, damage):
@@ -82,24 +92,35 @@ class TowerDefenseGame:
         self.enemies = [enemy for enemy in self.enemies if enemy.is_alive()]
         self.enemies = [enemy for enemy in self.enemies if not (enemy.cell_x, enemy.cell_y) == self.end_point]
 
-        if all(value == 0 for value in self.to_be_placed.values()) and not self.wave_is_on_going:
-            path_finder = CalculateOptimalPath(self.grid, self.start_point, self.end_point)
-            # print (self.end_point)
-            optimal_path = path_finder.calculate()
-            # Check if optimal_path was not found
-            if not optimal_path:
-                raise ValueError("Optimal path not found. Ensure that the path can be calculated given the grid, start, and end points.")
-            self.enemy_spawner = EnemySpawner(path=optimal_path,enemy_type=1, start_point=self.start_point, end_point=self.end_point, enemy_number=10, enemy_frequency=500, cell_size=self.CELL_SIZE)
-            self.enemy_spawner2 = EnemySpawner(path=optimal_path,enemy_type=2, start_point=self.start_point, end_point=self.end_point, enemy_number=5, enemy_frequency=1000, cell_size=self.CELL_SIZE)
-            self.wave_is_on_going = True
-
+        # if all(value == 0 for value in self.to_be_placed.values()) and not self.wave_is_on_going:
+        #     path_finder = CalculateOptimalPath(self.grid, self.start_point, self.end_point)
+        #     # print (self.end_point)
+        #     optimal_path = path_finder.calculate()
+        #     # Check if optimal_path was not found
+        #     if not optimal_path:
+        #         raise ValueError("Optimal path not found. Ensure that the path can be calculated given the grid, start, and end points.")
+        #     # I need to implement wave system, and I need to find a data structure that is matching my needs.
+            
+        #     self.start_wave(optimal_path)
+        #     self.wave_is_on_going = True
+        # print(self.wave_is_on_going)
+        # pdb.set_trace()
         if self.wave_is_on_going:
-            new_enemy = self.enemy_spawner.spawn()
-            new_enemy2 = self.enemy_spawner2.spawn()
-            if new_enemy is not None:
-                self.enemies.append(new_enemy)
-            if new_enemy2 is not None:
-                self.enemies.append(new_enemy2)
+            try:
+                for spawner in self.active_spawners:  
+                    new_enemy = spawner.spawn()
+                    if new_enemy is not None:
+                        #pdb.set_trace()
+                        self.enemies.append(new_enemy)
+                    if spawner.get_spawns_left() <= 0:
+                        print("removed")
+                        #pdb.set_trace()
+                        self.active_spawners.remove(spawner)
+                if self.active_spawners == [] and self.enemies == []:
+                    self.wave_is_on_going = False
+                    self.to_be_placed['tower'] += 2
+            except:
+                print("error")
 
     def update_towers(self):
         index = 0
@@ -179,6 +200,64 @@ class TowerDefenseGame:
                 
             # print(line)
 
+    def step(self):
+        # Start a wave and finish it...
+        # start_wave(1)
+        # is_ongoing_wave = true
+        # while is_ongoing_wave:
+        #   is_ongoing_wave = progress_wave(1)
+        # 
+        # return obs , reward, done
+
+        # obs : grid of current maze
+        # reward : enemies past, damage dealt, maze lenght
+        # done : player dead or all waves done
+
+        return 
+        
+    def start_wave(self):
+        path_finder = CalculateOptimalPath(self.grid, self.start_point, self.end_point)
+        # print (self.end_point)
+        optimal_path = path_finder.calculate()
+        # Check if optimal_path was not found
+        if not optimal_path:
+            raise ValueError("Optimal path not found. Ensure that the path can be calculated given the grid, start, and end points.")
+        # I need to implement wave system, and I need to find a data structure that is matching my needs.
+        
+        #self.start_wave(optimal_path)
+        self.wave_is_on_going = True
+        wave = self.waves[self.current_wave_index]
+        for enemy_type, quantity in wave:
+            self.new_spawner = EnemySpawner(path=optimal_path, enemy_type=enemy_type, 
+                                              start_point=self.start_point, 
+                                              end_point=self.end_point, 
+                                              enemy_number=quantity, enemy_frequency=500, cell_size=self.CELL_SIZE)
+            self.active_spawners.append(self.new_spawner)
+        # print(self.active_spawners)
+        self.current_wave_index = self.current_wave_index + 1
+
+
+    def progress_wave(self):
+        self.update_towers()
+        self.update_enemies()
+        # update enemies
+        # update towers
+        # return false if no enemy are alive or left to be spawn
+        return 
+    
+    def render(self):
+        self.draw_grid()
+        self.draw_enemies()
+        self.draw_projectiles()
+
+    def check_valid_action():
+        # if optimal_path:
+        #   return True
+        # else:
+        #   remove_action_from_space_action
+        #   return False
+        return 
+
 
     def main(self):
         clock = pygame.time.Clock()
@@ -187,30 +266,39 @@ class TowerDefenseGame:
         # self.place_structure(1, 1, 3)
         while run:
             clock.tick(self.FPS)
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    run = False
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    x, y = pygame.mouse.get_pos()
-                    i, j = y // self.CELL_SIZE, x // self.CELL_SIZE
-                    if event.button == 1 and self.to_be_placed['tower'] > 0:
-                        if all(self.grid[i + di][j + dj] == "" for di in range(2) for dj in range(2)):
-                            for di in range(2):
-                                for dj in range(2):
-                                    self.grid[i + di][j + dj] = "tower"
-                            self.towers.append(Tower((j, i), self.CELL_SIZE, range=100, attack_speed=4))  # Create a new Tower instance
-                            self.to_be_placed['tower'] -= 1
-                    elif event.button == 3 and self.to_be_placed['wall'] > 0:
-                        if self.grid[i][j] == "":
-                            self.grid[i][j] = "wall"
-                            self.walls.append((j * self.CELL_SIZE, i * self.CELL_SIZE))  # add this line
-                            self.to_be_placed['wall'] -= 1
-            self.update_towers()
-            self.update_enemies()
-            self.draw_grid()
-            self.draw_enemies()
-            self.draw_projectiles()
+            #print("update1")
+            # if (self.wave_is_on_going == True):
+                #print("update2")
+                # self.progress_wave()
+                # continue
+            if (self.wave_is_on_going == False):
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        run = False
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        x, y = pygame.mouse.get_pos()
+                        i, j = y // self.CELL_SIZE, x // self.CELL_SIZE
+                        if event.button == 1 and self.to_be_placed['tower'] > 0:
+                            if all(self.grid[i + di][j + dj] == "" for di in range(2) for dj in range(2)):
+                                for di in range(2):
+                                    for dj in range(2):
+                                        self.grid[i + di][j + dj] = "tower"
+                                self.towers.append(Tower((j, i), self.CELL_SIZE, range=100, attack_speed=4))  # Create a new Tower instance
+                                self.to_be_placed['tower'] -= 1
+                        elif event.button == 3 and self.to_be_placed['wall'] > 0:
+                            if self.grid[i][j] == "":
+                                self.grid[i][j] = "wall"
+                                self.walls.append((j * self.CELL_SIZE, i * self.CELL_SIZE))  # add this line
+                                self.to_be_placed['wall'] -= 1
 
+                if all(value == 0 for value in self.to_be_placed.values()):        
+                    self.start_wave()
+                
+            self.progress_wave()
+            self.render()
+
+            # self.progress_wave()
+            # self.render()
             pygame.display.update()
 
         pygame.quit()
