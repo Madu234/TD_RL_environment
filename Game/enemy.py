@@ -70,6 +70,7 @@ class Enemy:
             self.current_target += 1
             if self.current_target == len(self.path) - 1:
                 self.hp=0
+                # print("DAMAGE")
                 # game.player_life = game.player_life - 1
                 return 1 # Enemy has reached the final destination, you may take any required action
 
