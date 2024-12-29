@@ -6,7 +6,7 @@ from collections import deque
 import random
 import sys
 print (sys.executable)
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from Game_env import TowerDefenseGame
 
 class DQN(nn.Module):
@@ -23,14 +23,14 @@ class DQN(nn.Module):
         return x
 
 class DQNAgent:
-    def __init__(self, state_dim, action_dim):
+    def __init__(self, state_dim, action_dim, episodes):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.memory = deque(maxlen=10000)
         self.gamma = 0.99
         self.epsilon = 1.0
-        self.epsilon_decay = 0.99
         self.epsilon_min = 0.01
+        self.epsilon_decay = (self.epsilon - self.epsilon_min) / episodes
         self.learning_rate = 0.01
         self.batch_size = 8
         self.model = DQN(state_dim, action_dim)
@@ -71,7 +71,7 @@ class DQNAgent:
             self.optimizer.step()
         
         if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
+            self.epsilon -= self.epsilon_decay
 
 def preprocess_state(env):
     observation = np.array(env.observable_space).flatten()
@@ -81,11 +81,13 @@ def main():
     env = TowerDefenseGame()
     state_dim = env.GRID_SIZE * env.GRID_SIZE
     action_dim = env.GRID_SIZE * env.GRID_SIZE * 2  # (i, j, type) where type is 1 or 3
-    agent = DQNAgent(state_dim, action_dim)
-    episodes = 10000
+    
+    episodes = 1000
+    agent = DQNAgent(state_dim, action_dim, episodes)
+
     rewards = []
     avg_rewards = []
-
+    rate_episode = 10
     for e in range(episodes):
         env.reset()
         observation = preprocess_state(env)
@@ -118,18 +120,18 @@ def main():
         rewards.append(total_reward)
 
         # Calculate average reward every 100 episodes
-        if (e + 1) % 100 == 0:
+        if (e + 1) % rate_episode == 0:
             avg_reward = np.mean(rewards[-100:])
             avg_rewards.append(avg_reward)
             print(f"Episode {e + 1}, Average Reward: {avg_reward}")
 
     # Plot the average rewards
-    # plt.plot(avg_rewards)
-    # plt.xlabel('Episode (in hundreds)')
-    # plt.ylabel('Average Reward')
-    # plt.title('Average Reward per 100 Episodes')
-    # plt.savefig('average_reward.png')
-    # plt.show()
+    plt.plot(avg_rewards)
+    plt.xlabel(f'Episode (in {rate_episode})')
+    plt.ylabel('Average Reward')
+    plt.title(f'Average Reward per {rate_episode} Episodes')
+    plt.savefig('average_reward.png')
+    plt.show()
 
 if __name__ == "__main__":
     main()
