@@ -192,7 +192,7 @@ class TowerDefenseGame:
             file = open("map_empty.txt","r")
         except:
             # print("exception")
-            file = open("/home/madu/Desktop/Disertation_project/Game/map_empty.txt","r")
+            file = open("C:\\Users\\Madu\\Desktop\\Disertatie\\TD_RL_environment\\Game\\map_empty.txt","r")
         for x_index, line in enumerate(file):
             line = line.split(" ")
             for y_index,position in enumerate(line):
