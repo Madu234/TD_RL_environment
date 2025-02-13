@@ -13,14 +13,15 @@ import os
 class DQN(nn.Module):
     def __init__(self, input_dim, output_dim):
         super(DQN, self).__init__()
-        self.fc1 = nn.Linear(input_dim, 128)
-        self.fc2 = nn.Linear(128, 128)
+        self.fc1 = nn.Linear(input_dim, 16)
+        #self.fc2 = nn.Linear(64,64)
         #self.fc3 = nn.Linear(128, 128)
-        self.fc4 = nn.Linear(128, output_dim)
+        self.fc4 = nn.Linear(16, output_dim)
 
     def forward(self, x):
-        x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
+        x = torch.sigmoid(self.fc1(x))
+        #x = torch.sigmoid(self.fc2(x))
+        #x = torch.sigmoid(self.fc4(x))
         #x = torch.relu(self.fc3(x))
         x = self.fc4(x)
         return x
@@ -92,6 +93,7 @@ def main():
     action_dim = env.GRID_SIZE * env.GRID_SIZE * 2  # (i, j, type) where type is 1 or 3
     
     episodes = 1000
+    title = 'DQN16_1000episodes'
     agent = DQNAgent(state_dim, action_dim, episodes)
 
     rewards = []
@@ -104,10 +106,16 @@ def main():
         for time in range(500):
             while env.number_valid_actions():
                 while True:
+                    # Use the model to select an action
                     action = agent.act(observation)
                     i = action // (env.GRID_SIZE * 2)
                     j = (action % (env.GRID_SIZE * 2)) // 2
                     type = 1 if (action % 2) == 0 else 2
+                    
+                    # Random action
+                    # i = random.randint(0, 19)
+                    # j = random.randint(0, 19)
+                    # type = 2
                     if env.check_valid_action(i, j, type):
                         try:
                             env.place_structure_index(i, j, type)
@@ -116,12 +124,16 @@ def main():
                         break
                     else:
                         continue
+            
             next_state, next_observation, reward, done, _ = env.step()
             next_observation = preprocess_state(env)
             agent.remember(observation, action, reward, next_observation, done)
             agent.replay()  # Call replay after each step
             observation = next_observation
             total_reward += reward
+            if total_reward == 5:
+                for row in env.grid:
+                    print(row)
             if done:
                 agent.update_target_model()
                 print(f"episode: {e}/{episodes}, score: {total_reward}, e: {agent.epsilon:.2}")
@@ -140,7 +152,7 @@ def main():
     plt.ylabel('Average Reward')
     
     
-    title = 'DQN128_1000episodes'
+    
     plt.title(f'{title}')
 
     # Create a folder with the title name
@@ -150,6 +162,7 @@ def main():
     # Save the plot
     png_filename = get_next_filename(title, 'png', title)
     plt.savefig(png_filename)
+    
 
     # Save the rewards vector
     txt_filename = get_next_filename(title, 'txt', title)
@@ -166,7 +179,12 @@ def main():
     model_filename = get_next_filename(title, 'pt', title)  # Use 'h5' for TensorFlow/Keras
     torch.save(agent.model.state_dict(), model_filename)  # Use model.save(model_filename) for TensorFlow/Keras
 
-    plt.show()
+    #plt.show()
+    plt.clf()  # Clear the current figure
 
 if __name__ == "__main__":
+    main()
+    main()
+    main()
+    main()
     main()

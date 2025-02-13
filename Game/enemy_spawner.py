@@ -14,15 +14,11 @@ class EnemySpawner:
         self.cell_size = cell_size
         self.path = path
         self.spawned_enemies = 0
-        # self.last_spawn_time = pygame.time.get_ticks()
         self.last_spawn_frame = 0
 
 
     def spawn(self, current_frame):
-        # current_time = pygame.time.get_ticks()
-        # if self.spawned_enemies < self.enemy_number and current_time - self.last_spawn_time >= self.enemy_frequency:
         if self.spawned_enemies < self.enemy_number and current_frame - self.last_spawn_frame >= self.enemy_frequency:
-            #self.last_spawn_time = current_time
             self.last_spawn_frame = current_frame
             self.spawned_enemies += 1
             if self.enemy_type == 1:

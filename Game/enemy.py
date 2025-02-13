@@ -77,4 +77,4 @@ class Enemy:
         # Recompute the pixel coordinates
         self.x = self.cell_x * self.cell_size + self.cell_size // 2
         self.y = self.cell_y * self.cell_size + self.cell_size // 2
-
+        return 0

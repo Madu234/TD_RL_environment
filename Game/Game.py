@@ -120,7 +120,7 @@ class TowerDefenseGame:
                 for di in range(2):
                     for dj in range(2):
                         self.grid[i + di][j + dj] = "tower"
-                self.towers.append(Tower((x, y), self.CELL_SIZE, range=100, attack_speed=4))  # Create a new Tower instance
+                self.towers.append(Tower((x, y), self.CELL_SIZE, range=100, Reload_time=4))  # Create a new Tower instance
                 self.to_be_placed['tower'] -= 1
         elif type == 3 and self.to_be_placed['wall'] > 0:
             if self.grid[i][j] == "":
@@ -136,7 +136,7 @@ class TowerDefenseGame:
                 for di in range(2):
                     for dj in range(2):
                         self.grid[i + di][j + dj] = "tower"
-                self.towers.append(Tower((i, j), self.CELL_SIZE, range=100, attack_speed=4))  # Create a new Tower instance
+                self.towers.append(Tower((i, j), self.CELL_SIZE, range=100, Reload_time=4))  # Create a new Tower instance
                 self.to_be_placed['tower'] -= 1
         elif type == 3 and self.to_be_placed['wall'] > 0:
             if self.grid[i][j] == "":
@@ -198,7 +198,7 @@ class TowerDefenseGame:
                             for di in range(2):
                                 for dj in range(2):
                                     self.grid[i + di][j + dj] = "tower"
-                            self.towers.append(Tower((j, i), self.CELL_SIZE, range=100, attack_speed=4))  # Create a new Tower instance
+                            self.towers.append(Tower((j, i), self.CELL_SIZE, range=100, Reload_time=4))  # Create a new Tower instance
                             self.to_be_placed['tower'] -= 1
                     elif event.button == 3 and self.to_be_placed['wall'] > 0:
                         if self.grid[i][j] == "":
