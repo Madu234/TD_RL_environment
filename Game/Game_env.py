@@ -385,10 +385,14 @@ class TowerDefenseGame:
                         x, y = pygame.mouse.get_pos()
                         i, j = y // self.CELL_SIZE, x // self.CELL_SIZE
                         type = 3
-                        if event.button == 1:
+                        mouse_left_click = 1
+                        mouse_right_click = 3
+                        if event.button == mouse_left_click:
                             type = 2
-                        elif event.button == 3:
+                            #type = self.structure_dict.keys([self.structure_dict.values().index("tower")])
+                        elif event.button == mouse_right_click:
                             type = 1
+                            #type = self.structure_dict.values().index("wall")
                         if self.check_valid_action(i,j,type) and self.to_be_placed[self.structure_dict[type]]> 0:
                             if type == 2 and self.to_be_placed['tower'] > 0:
                                 if all(self.grid[i + di][j + dj] == "" for di in range(2) for dj in range(2)):
@@ -405,18 +409,22 @@ class TowerDefenseGame:
                             elif type == 3 and self.to_be_placed['obstacle'] > 0:
                                 self.grid[i][j] = "obstacle"
                                 self.to_be_placed['obstacle'] -= 1
+                            path_finder = CalculateOptimalPath(self.grid, self.start_point, self.end_point)
+                            # print (self.end_point)
+                            self.current_optimal_path = path_finder.calculate()
                             # if not loading_stage:
                             #     self.update_action_space()
-                            return True
-                        else:
-                            return False
+                            # return True
 
-                if all(value == 0 for value in self.to_be_placed.values()):        
-                    self.start_wave()
+                if all(value == 0 for value in self.to_be_placed.values()):  
+                    print("Wave started")      
+                    self.step()
+                else:
+                    self.render()
+                    
                 
             # self.progress_wave()
-            print("render")
-            self.render()
+
 
             # self.progress_wave()
             # self.render()
