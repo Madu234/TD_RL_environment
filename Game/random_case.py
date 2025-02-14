@@ -1,7 +1,7 @@
 # Random scenario
 import random
 from Game_env import TowerDefenseGame
-env = TowerDefenseGame(game_speed= 120, render=True)
+env = TowerDefenseGame(game_speed= 60, render=True)
 
 env.load_map()
 def random_place_structures(env):
@@ -23,13 +23,13 @@ def random_place_structures(env):
 # random_place_structures(env)
 # random_place_structures(env)
 env.place_structure_index(1, 0, 1)
-env.place_structure_index(1, 1, 2)
+env.place_structure_index(1, 0, 2)
 env.place_structure_index(1, 6, 1)
-env.place_structure_index(1, 8, 2)
-env.place_structure_index(1, 12, 1)
-env.place_structure_index(1, 14, 2)
+env.place_structure_index(1, 2, 2)
+env.place_structure_index(1, 2, 1)
+env.place_structure_index(1, 4, 2)
 env.place_structure_index(1, 9, 1)
-env.place_structure_index(1, 10, 2)
+env.place_structure_index(1, 6, 2)
 
 env.step()
 # env.place_structure_index(1, 12, 2)

@@ -189,7 +189,7 @@ class TowerDefenseGame:
             file = open("map_empty.txt","r")
         except:
             print("exception")
-            file = open("C:\\Users\\Madu\\Desktop\\Disertatie\\TD_RL_environment\\Game\\map_empty.txt","r")
+            file = open("Game/map_empty.txt","r")
             #file = open("C:\\Users\\Madu\\Desktop\\Disertatie\\TD_RL_environment\\Game\\map_cube.txt","r")
             print("created on cube ")
         for x_index, line in enumerate(file):
@@ -371,38 +371,52 @@ class TowerDefenseGame:
         pygame.quit()
 
 
-    # def main(self):
-    #     clock = pygame.time.Clock()
-    #     run = True
-    #     self.load_map()
-    #     while run:
-    #         clock.tick(self.FPS)
-    #         if (self.wave_is_on_going == False):
-    #             for event in pygame.event.get():
-    #                 if event.type == pygame.QUIT:
-    #                     run = False
-    #                 if event.type == pygame.MOUSEBUTTONDOWN:
-    #                     x, y = pygame.mouse.get_pos()
-    #                     i, j = y // self.CELL_SIZE, x // self.CELL_SIZE
-    #                     if event.button == 1 and self.to_be_placed['tower'] > 0 and i < self.GRID_SIZE-1 and j < self.GRID_SIZE-1:
-    #                         if all(self.grid[i + di][j + dj] == "" for di in range(2) for dj in range(2)):
-    #                             for di in range(2):
-    #                                 for dj in range(2):
-    #                                     self.grid[i + di][j + dj] = "tower"
-    #                             self.towers.append(Tower((j, i), self.CELL_SIZE, range=100,
-    #                                                       attack_speed=1))  # Create a new Tower instance
-    #                             self.to_be_placed['tower'] -= 1
-    #                     elif event.button == 3 and self.to_be_placed['wall'] > 0:
-    #                         if self.grid[i][j] == "":
-    #                             self.grid[i][j] = "wall"
-    #                             self.walls.append((j * self.CELL_SIZE, i * self.CELL_SIZE))  # add this line
-    #                             self.to_be_placed['wall'] -= 1
+    def main(self):
+        # clock = pygame.time.Clock()
+        run = True
+        self.load_map()
+        while run:
+            # clock.tick(self.FPS)
+            if (self.wave_is_on_going == False):
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        run = False
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        x, y = pygame.mouse.get_pos()
+                        i, j = y // self.CELL_SIZE, x // self.CELL_SIZE
+                        type = 3
+                        if event.button == 1:
+                            type = 2
+                        elif event.button == 3:
+                            type = 1
+                        if self.check_valid_action(i,j,type) and self.to_be_placed[self.structure_dict[type]]> 0:
+                            if type == 2 and self.to_be_placed['tower'] > 0:
+                                if all(self.grid[i + di][j + dj] == "" for di in range(2) for dj in range(2)):
+                                    for di in range(2):
+                                        for dj in range(2):
+                                            self.grid[i + di][j + dj] = "tower"
+                                    self.towers.append(Tower((j, i), self.CELL_SIZE, range=100, Reload_time=20, game_FPS= self.FPS))  # Create a new Tower instance
+                                    self.to_be_placed['tower'] -= 1
+                            elif type == 1 and self.to_be_placed['wall'] > 0:
+                                if self.grid[i][j] == "":
+                                    self.grid[i][j] = "wall"
+                                    self.walls.append((j * self.CELL_SIZE, i * self.CELL_SIZE))  # add this line
+                                    self.to_be_placed['wall'] -= 1
+                            elif type == 3 and self.to_be_placed['obstacle'] > 0:
+                                self.grid[i][j] = "obstacle"
+                                self.to_be_placed['obstacle'] -= 1
+                            # if not loading_stage:
+                            #     self.update_action_space()
+                            return True
+                        else:
+                            return False
 
-    #             if all(value == 0 for value in self.to_be_placed.values()):        
-    #                 self.start_wave()
+                if all(value == 0 for value in self.to_be_placed.values()):        
+                    self.start_wave()
                 
-    #         self.progress_wave()
-    #         self.render()
+            # self.progress_wave()
+            print("render")
+            self.render()
 
             # self.progress_wave()
             # self.render()
