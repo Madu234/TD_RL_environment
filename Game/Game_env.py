@@ -32,7 +32,7 @@ class TowerDefenseGame:
         self.action_space = [[0 for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
 
         # Make this a class placable structure
-        self.to_be_placed = {'tower': 4, 'wall':0, 'obstacle':0}
+        self.to_be_placed = {'tower': 4, 'wall':8, 'obstacle':0}
         self.structure_dict = {1: "wall", 2: "tower", 3: "obstacle"}
         self.struct_size_array = [1,2]
 
@@ -52,7 +52,7 @@ class TowerDefenseGame:
 
         self.current_reward = 0
         self.waves = [
-            [(1, 5), (2, 0)],  # Wave 1: 10 light enemies
+            [(1, 10), (2, 0)],  # Wave 1: 10 light enemies
             [(1, 5), (2, 0)],  # Wave 1: 10 light enemies
             #[(1, 10), (2, 0)],  # Wave 2: 10 light, 5 armored
             #[(1, 10), (2, 3)], # Wave 3: 10 light, 10 armored
@@ -188,10 +188,10 @@ class TowerDefenseGame:
         try:
             file = open("map_empty.txt","r")
         except:
-            print("exception")
+            #print("exception")
             file = open("Game/map_empty.txt","r")
             #file = open("C:\\Users\\Madu\\Desktop\\Disertatie\\TD_RL_environment\\Game\\map_cube.txt","r")
-            print("created on cube ")
+            #print("created on cube ")
         for x_index, line in enumerate(file):
             line = line.split(" ")
             for y_index,position in enumerate(line):
@@ -294,7 +294,7 @@ class TowerDefenseGame:
 
     def reset(self):
         self.grid = [["" for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
-        self.to_be_placed = {'tower': 4, 'wall': 0}
+        self.to_be_placed = {'tower': 4, 'wall': 8}
         self.enemies = []
         self.enemy_spawner = []  # Make this None initially
 
