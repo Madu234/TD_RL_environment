@@ -1,6 +1,9 @@
 import pygame
 import math
 
+normal_tower = {'range':100,'Reload_time':20,'damage':10,'max_age':0,'dmg_mod_per_age':0,'rld_mod_per_age':0,'color':(255, 0, 0)}
+age_tower = {'range':100,'Reload_time':20,'damage':10,'max_age':5,'dmg_mod_per_age':5,'rld_mod_per_age':2,'color':(255, 0, 0)}
+
 class Projectile:
     def __init__(self, start_pos, target, damage, armor_shred = 0):
         self.x, self.y = start_pos
@@ -29,20 +32,46 @@ class Projectile:
         pygame.draw.circle(WIN, self.color, (int(self.x), int(self.y)), self.radius)
 
 class Tower:
-    def __init__(self, pos, cell_size, range, Reload_time, game_FPS):
+    def __init__(self, pos, cell_size, range, Reload_time, max_age = 0, dmg_mod_per_age = 0, rld_mod_per_age = 0,type = 0):
         self.x = (pos[0]+1) * cell_size
         self.y = (pos[1]+1) * cell_size
 
-        self.range = range
-        self.Reload_time = int(Reload_time )#* game_FPS / 60)
-        self.target = None
-        self.projectiles = []
-        self.color = (255, 0, 0)  # Color of the tower
+        #Aging
+        
+
+        if type==0:
+            self.range = normal_tower['range']
+            self.Reload_time = int(normal_tower['Reload_time'])
+            self.target = None
+            self.projectiles = []
+            self.color = normal_tower['color']
+            self.damage = normal_tower['damage'] 
+            self.aging_left = max_age
+            self.damage_modification_per_age = normal_tower['dmg_mod_per_age']  
+            self.reloaded_modification_per_age = normal_tower['rld_mod_per_age']
+            self.aging_left = normal_tower['max_age']
+        elif type == 1:
+            self.range = age_tower['range']
+            self.Reload_time = int(age_tower['Reload_time'])
+            self.target = None
+            self.projectiles = []
+            self.color = age_tower['color']
+            self.damage = age_tower['damage']
+            self.damage_modification_per_age = age_tower['dmg_mod_per_age']  
+            self.reloaded_modification_per_age = age_tower['rld_mod_per_age']
+            self.aging_left = age_tower['max_age']
+
         self.width = 20  # Width of the tower
         self.height = 20  # Height of the tower
-        self.damage = 10
         self.shots_fired = 0
         self.last_shot_frame = 0
+    def aging(self):
+        print(self.aging_left)
+        if self.aging_left > 0:
+            self.damage += self.damage_modification_per_age
+            print(self.damage)
+            self.Reload_time -+ self.reloaded_modification_per_age
+        self.aging_left -= 1
 
     def center_position(self):
         return (self.x + self.width / 2, self.y + self.height / 2)

@@ -52,8 +52,16 @@ class TowerDefenseGame:
 
         self.current_reward = 0
         self.waves = [
-            [(1, 10), (2, 0)],  # Wave 1: 10 light enemies
-            [(1, 5), (2, 0)],  # Wave 1: 10 light enemies
+            [(1, 1), (2, 0)],  # Wave 1: 10 light enemies
+            [(1, 2), (2, 0)],  # Wave 1: 10 light enemies
+            [(1, 3), (2, 0)],
+            [(1, 3), (2, 0)],
+            [(1, 4), (2, 0)],
+            [(1, 4), (2, 0)],
+            [(1, 5), (2, 0)],
+            [(1, 5), (2, 0)],
+            [(1, 6), (2, 0)],
+            [(1, 6), (2, 0)],
             #[(1, 10), (2, 0)],  # Wave 2: 10 light, 5 armored
             #[(1, 10), (2, 3)], # Wave 3: 10 light, 10 armored
         ]
@@ -128,7 +136,7 @@ class TowerDefenseGame:
                     self.active_spawners.remove(spawner)
             if self.active_spawners == [] and self.enemies == []:
                 self.wave_is_on_going = False
-                # self.to_be_placed['tower'] += 2
+                self.to_be_placed['tower'] += 2
 
     def update_towers(self,current_frame):
         for tower in self.towers:
@@ -145,7 +153,7 @@ class TowerDefenseGame:
                 for di in range(2):
                     for dj in range(2):
                         self.grid[i + di][j + dj] = "tower"
-                self.towers.append(Tower((x, y), self.CELL_SIZE, range=100, Reload_time=20,game_FPS = self.FPS))  # Create a new Tower instance
+                self.towers.append(Tower((x, y), self.CELL_SIZE, range=100, Reload_time=20))  # Create a new Tower instance
                 self.to_be_placed['tower'] -= 1
         elif type == 3 and self.to_be_placed['wall'] > 0:
             if self.grid[i][j] == "":
@@ -162,7 +170,7 @@ class TowerDefenseGame:
                     for di in range(2):
                         for dj in range(2):
                             self.grid[i + di][j + dj] = "tower"
-                    self.towers.append(Tower((j, i), self.CELL_SIZE, range=100, Reload_time=20, game_FPS= self.FPS))  # Create a new Tower instance
+                    self.towers.append(Tower((j, i), self.CELL_SIZE, range=100, Reload_time=20, type = 1))  # Create a new Tower instance
                     self.to_be_placed['tower'] -= 1
             elif type == 1 and self.to_be_placed['wall'] > 0:
                 if self.grid[i][j] == "":
@@ -226,6 +234,7 @@ class TowerDefenseGame:
                     self.observable_space[row][col] = 0
 
     def step(self):
+        self.wave_is_on_going = True
         done = False
         info = ""
         self.start_wave()
@@ -235,9 +244,12 @@ class TowerDefenseGame:
             self.progress_wave(self.current_frame)
             if self.render_flag:
                 self.render()
+        for tower in self.towers:
+            tower.aging()
+            #print(f"tower aged {self.current_wave_index}")
         if self.current_wave_index == len(self.waves) - 1:
             done = True
-        self.render_flag = False
+        # self.render_flag = False
         return  self.action_space, self.observable_space, self.current_reward, done, info
         
     def start_wave(self):
@@ -304,6 +316,7 @@ class TowerDefenseGame:
         self.starting_reward = 100
         self.waves = [
             [(1, 5), (2, 0)],            # Wave 1: 10 light enemies
+            [(1, 5), (2, 0)], 
             [(1, 5), (2, 0)],  # Wave 1: 10 light enemies
             #[(1, 10), (2, 5)],  # Wave 2: 10 light, 5 armored
             #[(1, 10), (2, 10)], # Wave 3: 10 light, 10 armored
@@ -399,7 +412,7 @@ class TowerDefenseGame:
                                     for di in range(2):
                                         for dj in range(2):
                                             self.grid[i + di][j + dj] = "tower"
-                                    self.towers.append(Tower((j, i), self.CELL_SIZE, range=100, Reload_time=20, game_FPS= self.FPS))  # Create a new Tower instance
+                                    self.towers.append(Tower((j, i), self.CELL_SIZE, range=100, Reload_time=20))  # Create a new Tower instance
                                     self.to_be_placed['tower'] -= 1
                             elif type == 1 and self.to_be_placed['wall'] > 0:
                                 if self.grid[i][j] == "":
