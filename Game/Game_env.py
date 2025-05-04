@@ -12,9 +12,12 @@ class TowerDefenseGame:
         pygame.init()
 
         self.wave_is_on_going = False
-        self.WIDTH, self.HEIGHT = 800, 800
-        self.GRID_SIZE = 20
-        self.CELL_SIZE = self.WIDTH // self.GRID_SIZE
+        # self.WIDTH, self.HEIGHT = 800, 800
+        self.GRID_SIZE = 10
+        # 40 CELL SIZE
+        self.CELL_SIZE = 40
+        self.WIDTH = self.CELL_SIZE * self.GRID_SIZE
+        self.HEIGHT = self.CELL_SIZE * self.GRID_SIZE
         self.render_flag = render
         self.FPS = game_speed
         self.current_optimal_path = []
@@ -31,8 +34,7 @@ class TowerDefenseGame:
         self.observable_space = [[0 for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
         self.action_space = [[0 for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
 
-        # Make this a class placable structure
-        self.to_be_placed = {'tower': 4, 'wall':8, 'obstacle':0}
+        
         self.structure_dict = {1: "wall", 2: "tower", 3: "obstacle"}
         self.struct_size_array = [1,2]
 
@@ -41,30 +43,34 @@ class TowerDefenseGame:
         
         self.towers = []
         self.walls = []
-        
+        #self.spawner_delay = 0
 
         self.start_point = (0, 0)
-        self.end_point = (0, 19)
+        self.end_point = (0, 9)
         self.grid[self.start_point[0]][self.start_point[1]] = "start"
         self.grid[self.end_point[0]][self.end_point[1]] = "finish"
         # self.action_space = []
         
 
         self.current_reward = 0
-        self.waves = [
-            [(1, 1), (2, 0)],  # Wave 1: 10 light enemies
-            [(1, 2), (2, 0)],  # Wave 1: 10 light enemies
-            [(1, 3), (2, 0)],
-            [(1, 3), (2, 0)],
-            [(1, 4), (2, 0)],
-            [(1, 4), (2, 0)],
-            [(1, 5), (2, 0)],
-            [(1, 5), (2, 0)],
-            [(1, 6), (2, 0)],
-            [(1, 6), (2, 0)],
-            #[(1, 10), (2, 0)],  # Wave 2: 10 light, 5 armored
-            #[(1, 10), (2, 3)], # Wave 3: 10 light, 10 armored
+        self.initial_to_be_placed ={'tower': 2, 'wall':0, 'obstacle':0}
+        self.initial_waves =[
+            # enemy_type : 1 - light, 2 - armored
+            # enemy_type, quantity, enemy_frequency , delay
+            [(1, 1, 30, 0), (2, 0, 30, 0)],
+            [(1, 2, 30, 0), (2, 0, 30, 0)],
+            [(1, 3, 30, 0), (2, 0, 30, 0)],
+            [(1, 8, 30, 0), (2, 1, 30, 0)],
+            [(1, 10, 15, 0), (2, 4, 30, 0)],
+            #[(1, 4), (2, 0)],
+            #[(1, 5), (2, 0)],
+            #[(1, 5), (2, 0)],
+            #[(1, 6), (2, 0)],
+            #[(1, 6), (2, 0)],
         ]
+        # Make this a class placable structure
+        self.to_be_placed = self.initial_to_be_placed
+        self.waves = self.initial_waves
         self.current_frame = 0
         self.current_wave_index = 0
         self.active_spawners = []
@@ -92,7 +98,12 @@ class TowerDefenseGame:
             for j in range(self.GRID_SIZE):
                 size_rect = pygame.Rect(j * self.CELL_SIZE, i * self.CELL_SIZE, self.CELL_SIZE, self.CELL_SIZE)
                 if self.grid[i][j] == "tower" and (i != 0 or i != self.CELL_SIZE):
-                    pygame.draw.rect(self.WIN, self.RED, size_rect)
+                    color = self.RED
+                    for tower in self.towers:
+                        if i == tower.i and j == tower.j:
+                            color = tower.get_color()
+
+                    pygame.draw.rect(self.WIN, color, size_rect)
                 elif self.grid[i][j] == "wall":
                     pygame.draw.rect(self.WIN, self.BLUE, size_rect)
                 elif self.grid[i][j] == "obstacle":
@@ -136,7 +147,7 @@ class TowerDefenseGame:
                     self.active_spawners.remove(spawner)
             if self.active_spawners == [] and self.enemies == []:
                 self.wave_is_on_going = False
-                self.to_be_placed['tower'] += 2
+                self.to_be_placed['tower'] += 1
 
     def update_towers(self,current_frame):
         for tower in self.towers:
@@ -162,7 +173,7 @@ class TowerDefenseGame:
                 self.to_be_placed['wall'] -= 1
         self.update_action_space()
 
-    def place_structure_index(self, i, j, type, loading_stage = False):
+    def place_structure_index(self, i, j, type, loading_stage = False, tower_type = 1):
         #print(f"place_structure_index called: i={i}, j={j}, type={type}")
         if self.check_valid_action(i,j,type) and self.to_be_placed[self.structure_dict[type]]> 0:
             if type == 2 and self.to_be_placed['tower'] > 0:
@@ -170,7 +181,7 @@ class TowerDefenseGame:
                     for di in range(2):
                         for dj in range(2):
                             self.grid[i + di][j + dj] = "tower"
-                    self.towers.append(Tower((j, i), self.CELL_SIZE, range=100, Reload_time=20, type = 1))  # Create a new Tower instance
+                    self.towers.append(Tower((j, i), self.CELL_SIZE, range=100, Reload_time=20, type = tower_type))  # Create a new Tower instance
                     self.to_be_placed['tower'] -= 1
             elif type == 1 and self.to_be_placed['wall'] > 0:
                 if self.grid[i][j] == "":
@@ -251,8 +262,9 @@ class TowerDefenseGame:
             done = True
         # self.render_flag = False
         return  self.action_space, self.observable_space, self.current_reward, done, info
-        
     def start_wave(self):
+        #self.spawner_delay =0
+        
         path_finder = CalculateOptimalPath(self.grid, self.start_point, self.end_point)
         # print (self.end_point)
         self.current_optimal_path = path_finder.calculate()
@@ -263,12 +275,13 @@ class TowerDefenseGame:
         if self.current_wave_index >= len(self.waves):
             return
         wave = self.waves[self.current_wave_index]
-        for enemy_type, quantity in wave:
+        for enemy_type, quantity, enemy_frequency, delay in wave:
             self.new_spawner = EnemySpawner(path=self.current_optimal_path, enemy_type=enemy_type, 
                                               start_point=self.start_point, 
                                               end_point=self.end_point, 
-                                              enemy_number=quantity, enemy_frequency=30, cell_size=self.CELL_SIZE
-                                              ,game_FPS=self.FPS)
+                                              enemy_number=quantity, enemy_frequency=enemy_frequency, cell_size=self.CELL_SIZE
+                                              ,game_FPS=self.FPS, delay = delay)
+            #self.spawner_delay +=10
             self.active_spawners.append(self.new_spawner)
         self.current_wave_index = self.current_wave_index + 1
 
@@ -306,7 +319,7 @@ class TowerDefenseGame:
 
     def reset(self):
         self.grid = [["" for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
-        self.to_be_placed = {'tower': 4, 'wall': 8}
+        self.to_be_placed = self.initial_to_be_placed
         self.enemies = []
         self.enemy_spawner = []  # Make this None initially
 
@@ -314,13 +327,7 @@ class TowerDefenseGame:
         self.walls = []
         self.load_map()
         self.starting_reward = 100
-        self.waves = [
-            [(1, 5), (2, 0)],            # Wave 1: 10 light enemies
-            [(1, 5), (2, 0)], 
-            [(1, 5), (2, 0)],  # Wave 1: 10 light enemies
-            #[(1, 10), (2, 5)],  # Wave 2: 10 light, 5 armored
-            #[(1, 10), (2, 10)], # Wave 3: 10 light, 10 armored
-        ]
+        self.waves = self.initial_waves
         self.current_wave_index = 0
         self.active_spawners = []
         self.enemies = []

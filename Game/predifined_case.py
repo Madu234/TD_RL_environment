@@ -1,7 +1,7 @@
 # Random scenario
 import random
 from Game_env import TowerDefenseGame
-env = TowerDefenseGame(game_speed= 180, render=True)
+env = TowerDefenseGame(game_speed= 60, render=True)
 
 env.load_map()
 def random_place_structures(env):
@@ -22,16 +22,32 @@ def random_place_structures(env):
 # random_place_structures(env)
 # random_place_structures(env)
 # random_place_structures(env)
-env.place_structure_index(1, 0, 1)
-env.place_structure_index(1, 1, 2)
-env.place_structure_index(1, 2, 1)
-env.place_structure_index(0, 4, 2)
-env.place_structure_index(2, 4, 1)
-env.place_structure_index(3, 4, 2)
-env.place_structure_index(4, 3, 1)
-env.place_structure_index(5, 1, 2)
+env.place_structure_index(1, 0, 2, tower_type=1)
+env.place_structure_index(1, 2, 2, tower_type=1)
 
+# env.place_structure_index(1, 2, 2, tower_type=0)
+# env.place_structure_index(1, 4, 2, tower_type=0)
+# env.place_structure_index(1, 6, 2, tower_type=0)
 env.step()
+env.place_structure_index(1, 4, 2, tower_type=1)
+# env.place_structure_index(1, 10, 2, tower_type=0)
+env.step()
+env.place_structure_index(1, 6, 2, tower_type=0)
+#env.place_structure_index(1, 14, 2, tower_type=0)
+env.step()
+env.place_structure_index(1, 8, 2, tower_type=0)
+#env.place_structure_index(3, 17, 2, tower_type=0)
+env.step()
+env.place_structure_index(4, 8, 2, tower_type=0)
+env.step()
+# env.place_structure_index(1, 2, 1)
+# env.place_structure_index(0, 4, 2)
+# env.place_structure_index(2, 4, 1)
+# env.place_structure_index(3, 4, 2)
+# env.place_structure_index(4, 3, 1)
+# env.place_structure_index(5, 1, 2)
+
+
 env.step()
 env.step()
 env.step()

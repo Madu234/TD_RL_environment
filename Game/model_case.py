@@ -104,6 +104,7 @@ def main():
         observation = preprocess_state(env)
         total_reward = 0
         for time in range(500):
+            # while env.waves_available():
             while env.number_valid_actions():
                 while True:
                     # Use the model to select an action
@@ -116,9 +117,9 @@ def main():
                     # i = random.randint(0, 19)
                     # j = random.randint(0, 19)
                     # type = 2
-                    if env.check_valid_action(i, j, type):
+                    if env.check_valid_action(i, j, 2):
                         try:
-                            env.place_structure_index(i, j, type)
+                            env.place_structure_index(i, j, 2, tower_type=type-1)
                         except:
                             continue
                         break

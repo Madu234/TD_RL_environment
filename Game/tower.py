@@ -2,7 +2,7 @@ import pygame
 import math
 
 normal_tower = {'range':100,'Reload_time':20,'damage':10,'max_age':0,'dmg_mod_per_age':0,'rld_mod_per_age':0,'color':(255, 0, 0)}
-age_tower = {'range':100,'Reload_time':20,'damage':10,'max_age':5,'dmg_mod_per_age':5,'rld_mod_per_age':2,'color':(255, 0, 0)}
+age_tower = {'range':100,'Reload_time':20,'damage':10,'max_age':5,'dmg_mod_per_age':5,'rld_mod_per_age':2,'color':(255, 100, 0)}
 
 class Projectile:
     def __init__(self, start_pos, target, damage, armor_shred = 0):
@@ -33,16 +33,27 @@ class Projectile:
 
 class Tower:
     def __init__(self, pos, cell_size, range, Reload_time, max_age = 0, dmg_mod_per_age = 0, rld_mod_per_age = 0,type = 0):
+        self.i = pos[0]
+        self.j = pos[1]
         self.x = (pos[0]+1) * cell_size
         self.y = (pos[1]+1) * cell_size
-
+        self.target = None
         #Aging
+        self.range = 0
+        self.Reload_time = 0
         
+        self.projectiles = []
+        self.color = normal_tower['color']
+        self.damage = normal_tower['damage'] 
+        self.aging_left = max_age
+        self.damage_modification_per_age = normal_tower['dmg_mod_per_age']  
+        self.reloaded_modification_per_age = normal_tower['rld_mod_per_age']
+        self.aging_left = normal_tower['max_age']
 
         if type==0:
             self.range = normal_tower['range']
             self.Reload_time = int(normal_tower['Reload_time'])
-            self.target = None
+            
             self.projectiles = []
             self.color = normal_tower['color']
             self.damage = normal_tower['damage'] 
@@ -53,7 +64,6 @@ class Tower:
         elif type == 1:
             self.range = age_tower['range']
             self.Reload_time = int(age_tower['Reload_time'])
-            self.target = None
             self.projectiles = []
             self.color = age_tower['color']
             self.damage = age_tower['damage']
@@ -66,10 +76,10 @@ class Tower:
         self.shots_fired = 0
         self.last_shot_frame = 0
     def aging(self):
-        print(self.aging_left)
+        #print(self.aging_left)
         if self.aging_left > 0:
             self.damage += self.damage_modification_per_age
-            print(self.damage)
+            #print(self.damage)
             self.Reload_time -+ self.reloaded_modification_per_age
         self.aging_left -= 1
 
@@ -99,6 +109,9 @@ class Tower:
             self.projectiles.append(Projectile((self.x, self.y), self.target, self.damage))
             self.last_shot_frame = current_frame
             self.shots_fired += 1
+
+    def get_color(self):
+        return self.color
 
     def update_projectiles(self):
         total_hit_reward = 0
