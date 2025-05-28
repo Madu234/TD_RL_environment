@@ -20,6 +20,7 @@ class EnemySpawner:
 
     def spawn(self, current_frame):
         if self.spawned_enemies < self.enemy_number and current_frame - self.last_spawn_frame + self.delay >= self.enemy_frequency:
+            self.delay = 0
             self.last_spawn_frame = current_frame
             self.spawned_enemies += 1
             if self.enemy_type == 1:

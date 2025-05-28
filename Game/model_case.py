@@ -13,10 +13,10 @@ import os
 class DQN(nn.Module):
     def __init__(self, input_dim, output_dim):
         super(DQN, self).__init__()
-        self.fc1 = nn.Linear(input_dim, 64)
+        self.fc1 = nn.Linear(input_dim, 128)
         #self.fc2 = nn.Linear(64,64)
         #self.fc3 = nn.Linear(128, 128)
-        self.fc4 = nn.Linear(64, output_dim)
+        self.fc4 = nn.Linear(128, output_dim)
 
     def forward(self, x):
         x = torch.sigmoid(self.fc1(x))
@@ -78,7 +78,7 @@ class DQNAgent:
             self.epsilon -= self.epsilon_decay
 
 def preprocess_state(env):
-    observation = np.array(env.observable_space).flatten()
+    observation = np.array(env.action_space).flatten()
     return observation
 
 def get_next_filename(base_name, extension, folder):
@@ -93,7 +93,7 @@ def main():
     action_dim = env.GRID_SIZE * env.GRID_SIZE * 2  # (i, j, type) where type is 1 or 3
     
     episodes = 1000
-    title = 'DQN64_1000episodes'
+    title = 'DQN128_1000episodes'
     agent = DQNAgent(state_dim, action_dim, episodes)
 
     rewards = []
@@ -103,7 +103,9 @@ def main():
         env.reset()
         observation = preprocess_state(env)
         total_reward = 0
-        for time in range(500):
+        episode_reward = 0
+        actions = []
+        for wave in range(500):
             # while env.waves_available():
             while env.number_valid_actions():
                 while True:
@@ -120,6 +122,7 @@ def main():
                     if env.check_valid_action(i, j, 2):
                         try:
                             env.place_structure_index(i, j, 2, tower_type=type-1)
+                            actions.append(action)
                         except:
                             continue
                         break
@@ -127,23 +130,22 @@ def main():
                         continue
             
             next_state, next_observation, reward, done, _ = env.step()
-            next_observation = preprocess_state(env)
-            agent.remember(observation, action, reward, next_observation, done)
-            agent.replay()  # Call replay after each step
-            observation = next_observation
-            total_reward += reward
-            if total_reward == 5:
-                for row in env.grid:
-                    print(row)
+            episode_reward += reward
             if done:
                 agent.update_target_model()
-                print(f"episode: {e}/{episodes}, score: {total_reward}, e: {agent.epsilon:.2}")
+                print(f"episode: {e}/{episodes}, score: {episode_reward}, e: {agent.epsilon:.2}")
                 break
+            next_observation = preprocess_state(env)
+        agent.remember(observation, actions, episode_reward, next_observation, done)
+        agent.replay()  # Call replay after each step
+        observation = next_observation
+        total_reward += episode_reward
+            
         rewards.append(total_reward)
 
         # Calculate average reward every 100 episodes
         if (e + 1) % rate_episode == 0:
-            avg_reward = np.mean(rewards[-100:])
+            avg_reward = np.mean(rewards[-10:])
             avg_rewards.append(avg_reward)
             print(f"Episode {e + 1}, Average Reward: {avg_reward}")
 

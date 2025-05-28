@@ -2,7 +2,7 @@ import pygame
 import math
 
 normal_tower = {'range':100,'Reload_time':20,'damage':10,'max_age':0,'dmg_mod_per_age':0,'rld_mod_per_age':0,'color':(255, 0, 0)}
-age_tower = {'range':100,'Reload_time':20,'damage':10,'max_age':5,'dmg_mod_per_age':5,'rld_mod_per_age':2,'color':(255, 100, 0)}
+age_tower = {'range':100,'Reload_time':20,'damage':10,'max_age':5,'dmg_mod_per_age':5,'rld_mod_per_age':2,'color':(200, 255, 0)}
 
 class Projectile:
     def __init__(self, start_pos, target, damage, armor_shred = 0):

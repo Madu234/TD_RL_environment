@@ -24,22 +24,28 @@ def random_place_structures(env):
 # random_place_structures(env)
 env.place_structure_index(1, 0, 2, tower_type=1)
 env.place_structure_index(1, 2, 2, tower_type=1)
-
+total_reward = 0
 # env.place_structure_index(1, 2, 2, tower_type=0)
 # env.place_structure_index(1, 4, 2, tower_type=0)
 # env.place_structure_index(1, 6, 2, tower_type=0)
-env.step()
+next_state, next_observation, reward, done, _ = env.step()
+total_reward += reward
 env.place_structure_index(1, 4, 2, tower_type=1)
 # env.place_structure_index(1, 10, 2, tower_type=0)
-env.step()
+next_state, next_observation, reward, done, _ = env.step()
+total_reward += reward
 env.place_structure_index(1, 6, 2, tower_type=0)
 #env.place_structure_index(1, 14, 2, tower_type=0)
-env.step()
+next_state, next_observation, reward, done, _ = env.step()
+total_reward += reward
 env.place_structure_index(1, 8, 2, tower_type=0)
 #env.place_structure_index(3, 17, 2, tower_type=0)
-env.step()
+next_state, next_observation, reward, done, _ = env.step()
+total_reward += reward
 env.place_structure_index(4, 8, 2, tower_type=0)
-env.step()
+next_state, next_observation, reward, done, _  = env.step()
+total_reward += reward
+print (total_reward)
 # env.place_structure_index(1, 2, 1)
 # env.place_structure_index(0, 4, 2)
 # env.place_structure_index(2, 4, 1)

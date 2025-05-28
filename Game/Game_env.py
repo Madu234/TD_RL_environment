@@ -100,9 +100,14 @@ class TowerDefenseGame:
                 if self.grid[i][j] == "tower" and (i != 0 or i != self.CELL_SIZE):
                     color = self.RED
                     for tower in self.towers:
-                        if i == tower.i and j == tower.j:
+                        if j == tower.i and i == tower.j:
                             color = tower.get_color()
-
+                        if j-1 == tower.i and i == tower.j:
+                            color = tower.get_color()
+                        if j == tower.i and i-1 == tower.j:
+                            color = tower.get_color()
+                        if j-1 == tower.i and i-1 == tower.j:
+                            color = tower.get_color()
                     pygame.draw.rect(self.WIN, color, size_rect)
                 elif self.grid[i][j] == "wall":
                     pygame.draw.rect(self.WIN, self.BLUE, size_rect)
@@ -257,11 +262,12 @@ class TowerDefenseGame:
                 self.render()
         for tower in self.towers:
             tower.aging()
-            #print(f"tower aged {self.current_wave_index}")
-        if self.current_wave_index == len(self.waves) - 1:
+            #print(f"tower aged {self.current_wave_index}"
+        if self.current_wave_index == len(self.waves):
             done = True
         # self.render_flag = False
         return  self.action_space, self.observable_space, self.current_reward, done, info
+    
     def start_wave(self):
         #self.spawner_delay =0
         
@@ -284,7 +290,8 @@ class TowerDefenseGame:
             #self.spawner_delay +=10
             self.active_spawners.append(self.new_spawner)
         self.current_wave_index = self.current_wave_index + 1
-
+    def are_waves_left():
+        return 
     def progress_wave(self,current_frame):
         self.update_towers(current_frame)
         self.update_enemies(current_frame)
@@ -360,7 +367,7 @@ class TowerDefenseGame:
                                 for j_struct in range(structure_size):
                                     buffer_grid[row+i_struct][col+j_struct]= 1
                             
-                            # TO DO: Expereriment with local A*
+                            # TO DO: Experiment with local A*
                             buffer_path = CalculateOptimalPath(buffer_grid,self.start_point,self.end_point).calculate()
                             if buffer_path:
                                 self.action_space[row][col] += 2**index
