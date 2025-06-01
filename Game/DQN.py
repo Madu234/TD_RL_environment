@@ -9,7 +9,10 @@ print (sys.executable)
 import matplotlib.pyplot as plt
 from Game_env import TowerDefenseGame
 import os
+import subprocess
 
+episodes = 1000
+title = 'DQN128_1000episodes'
 class DQN(nn.Module):
     def __init__(self, input_dim, output_dim):
         super(DQN, self).__init__()
@@ -92,8 +95,7 @@ def main():
     state_dim = env.GRID_SIZE * env.GRID_SIZE
     action_dim = env.GRID_SIZE * env.GRID_SIZE * 2  # (i, j, type) where type is 1 or 3
     
-    episodes = 1000
-    title = 'DQN128_1000episodes'
+
     agent = DQNAgent(state_dim, action_dim, episodes)
 
     rewards = []
@@ -102,23 +104,16 @@ def main():
     for e in range(episodes):
         env.reset()
         observation = preprocess_state(env)
-        total_reward = 0
         episode_reward = 0
         actions = []
         for wave in range(500):
-            # while env.waves_available():
             while env.number_valid_actions():
                 while True:
-                    # Use the model to select an action
                     action = agent.act(observation)
                     i = action // (env.GRID_SIZE * 2)
                     j = (action % (env.GRID_SIZE * 2)) // 2
                     type = 1 if (action % 2) == 0 else 2
                     
-                    # Random action
-                    # i = random.randint(0, 19)
-                    # j = random.randint(0, 19)
-                    # type = 2
                     if env.check_valid_action(i, j, 2):
                         try:
                             env.place_structure_index(i, j, 2, tower_type=type-1)
@@ -136,14 +131,13 @@ def main():
                 print(f"episode: {e}/{episodes}, score: {episode_reward}, e: {agent.epsilon:.2}")
                 break
             next_observation = preprocess_state(env)
-        agent.remember(observation, actions, episode_reward, next_observation, done)
-        agent.replay()  # Call replay after each step
-        observation = next_observation
-        total_reward += episode_reward
             
-        rewards.append(total_reward)
+        agent.remember(observation, actions, episode_reward, next_observation, done)
+        agent.replay()
+        observation = next_observation
+        
+        rewards.append(episode_reward)
 
-        # Calculate average reward every 100 episodes
         if (e + 1) % rate_episode == 0:
             avg_reward = np.mean(rewards[-10:])
             avg_rewards.append(avg_reward)
@@ -153,9 +147,6 @@ def main():
     plt.plot(avg_rewards)
     plt.xlabel(f'Average Reward per {rate_episode} Episodes')
     plt.ylabel('Average Reward')
-    
-    
-    
     plt.title(f'{title}')
 
     # Create a folder with the title name
@@ -165,7 +156,6 @@ def main():
     # Save the plot
     png_filename = get_next_filename(title, 'png', title)
     plt.savefig(png_filename)
-    
 
     # Save the rewards vector
     txt_filename = get_next_filename(title, 'txt', title)
@@ -173,21 +163,19 @@ def main():
         for reward in rewards:
             f.write(f"{reward:.2f}\n")
     average_title = f"average_{title}"
-    txt_filename2 = get_next_filename(average_title, 'txt',title)
+    txt_filename2 = get_next_filename(average_title, 'txt', title)
     with open(txt_filename2, 'w') as f:
         for avg_reward in avg_rewards:
             f.write(f"{avg_reward:.2f}\n")
 
     # Save the trained model
-    model_filename = get_next_filename(title, 'pt', title)  # Use 'h5' for TensorFlow/Keras
-    torch.save(agent.model.state_dict(), model_filename)  # Use model.save(model_filename) for TensorFlow/Keras
+    model_filename = get_next_filename(title, 'pt', title)
+    torch.save(agent.model.state_dict(), model_filename)
 
-    #plt.show()
     plt.clf()  # Clear the current figure
 
+    # Call advance_plot.py to process the folder
+    subprocess.run(['python3', '/home/madu/Desktop/TD_RL_environment/Game/advance_plot.py', title])
+
 if __name__ == "__main__":
-    main()
-    main()
-    main()
-    main()
     main()
