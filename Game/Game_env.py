@@ -6,9 +6,9 @@ from tower import Tower
 import os
 import pdb
 import time
-
+import random
 class TowerDefenseGame:
-    def __init__(self, game_speed = 60, render = False):
+    def __init__(self, game_speed = 60, render = False, training_mode = True, selected_map = ""):
         pygame.init()
 
         self.wave_is_on_going = False
@@ -27,6 +27,8 @@ class TowerDefenseGame:
         self.BLUE = (0, 0, 255)
         self.GREEN = (0, 255, 0)
         self.VIOLET = (127,0,255)
+        self.training_mode = training_mode
+        self.selected_map = selected_map
 
         self.WIN = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
 
@@ -76,9 +78,7 @@ class TowerDefenseGame:
         self.active_spawners = []
         self.enemies = []
         self.enemy_spawner = []  # Make this None initially
-
-        self.rewards = 5
-
+        
     def number_valid_actions(self):
         sum = 0
         for value in self.to_be_placed.values():
@@ -97,6 +97,8 @@ class TowerDefenseGame:
         for i in range(self.GRID_SIZE):
             for j in range(self.GRID_SIZE):
                 size_rect = pygame.Rect(j * self.CELL_SIZE, i * self.CELL_SIZE, self.CELL_SIZE, self.CELL_SIZE)
+                # Draw contor line start with i=0, increment j when detected a tower drawn a slighty blackish square and over it the normal color
+                # there will 10-20 pixel of blackish color
                 if self.grid[i][j] == "tower" and (i != 0 or i != self.CELL_SIZE):
                     color = self.RED
                     for tower in self.towers:
@@ -208,17 +210,27 @@ class TowerDefenseGame:
 
     def load_map(self):
         self.grid = [["" for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
-        # print(os.getcwd())
+        # Determine folder for maps
+        base_dir = os.path.dirname(__file__)
+        if self.training_mode:
+            folder = os.path.join(base_dir, "Maps", "Training")
+        else:
+            folder = os.path.join(base_dir, "Maps", "Evaluation")
+        map_files = [f for f in os.listdir(folder) if f.startswith("map_") and f.endswith(".txt")]
+        # Pick a random map unless selected_map is set
+        if self.selected_map:
+            map_file = self.selected_map
+        else:
+            map_file = random.choice(map_files)
         try:
-            file = open("map_empty.txt","r")
-        except:
-            #print("exception")
-            file = open("Game/map_empty.txt","r")
-            #file = open("C:\\Users\\Madu\\Desktop\\Disertatie\\TD_RL_environment\\Game\\map_cube.txt","r")
-            #print("created on cube ")
+            file = open(os.path.join(folder, map_file), "r")
+        except Exception as e:
+            print(f"Could not open map file: {os.path.join(folder, map_file)}, error: {e}")
+            # fallback to empty map
+            file = open(os.path.join(base_dir, "map_empty.txt"), "r")
         for x_index, line in enumerate(file):
             line = line.split(" ")
-            for y_index,position in enumerate(line):
+            for y_index, position in enumerate(line):
                 type = position[0]
                 if type == 'S' or type == 's':
                     self.start_point = (x_index, y_index)
@@ -227,15 +239,15 @@ class TowerDefenseGame:
                     self.end_point = (x_index, y_index)
                     self.grid[self.end_point[0]][self.end_point[1]] = "finish"
                 elif type != '0':
-                    # print(x_index,y_index)
                     if type == '3':
                         self.to_be_placed['obstacle'] += 1
                     self.place_structure_index(x_index, y_index, int(type), loading_stage=True)
-        self.update_action_space()        
-    
+        self.update_action_space()
+
     def update_observable_space(self):
         for row in self.grid:
             for col in row:
+                # change to include type 2 of tower
                 if self.grid[row][col] == "tower":
                     self.observable_space[row][col] = 1
                 elif self.grid[row][col] == "wall":
@@ -248,6 +260,7 @@ class TowerDefenseGame:
                     self.observable_space[row][col] = 4
                 else:
                     self.observable_space[row][col] = 0
+        # add future wave incoming 
 
     def step(self):
         self.wave_is_on_going = True
