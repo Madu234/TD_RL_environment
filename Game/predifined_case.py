@@ -18,7 +18,7 @@ def random_place_structures(env):
             print("invalid")
             continue
 
-env.step()
+#env.step()
 # random_place_structures(env)
 # random_place_structures(env)
 # random_place_structures(env)
