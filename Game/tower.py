@@ -39,7 +39,7 @@ class Tower:
         self.y = (pos[1]+1) * cell_size
         self.target = None
         #Aging
-        self.range = 0
+        self.range = range
         self.Reload_time = 0
         
         self.projectiles = []

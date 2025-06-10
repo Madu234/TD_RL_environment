@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import os
 from Game_env import TowerDefenseGame
-from policy_gradient_masked import PolicyNetwork
+from SARSA import QNetwork
 import re
 from collections import defaultdict
 import matplotlib.pyplot as plt
@@ -20,61 +20,57 @@ def preprocess_state(env):
                 valid_actions.append(idx2)
     return np.array(valid_actions, dtype=np.int32)
 
-def evaluate_model(model_path, obs_dim, valid_action_dim):
+def evaluate_model(model_path, obs_dim, action_dim):
     env = TowerDefenseGame(training_mode=False)
-    model = PolicyNetwork(obs_dim, valid_action_dim)
+    model = QNetwork(obs_dim, action_dim)
     model.load_state_dict(torch.load(model_path, map_location='cpu'))
     model.eval()
 
     env.reset()
     total_reward = 0
 
-    for wave in range(1):  # Evaluate only one wave
-        obs = env.get_observable_space()
-        while env.number_valid_actions():
-            valid_action_indices = preprocess_state(env)
-            if len(valid_action_indices) == 0:
-                break
-            observable_grid, waves_left = obs
-            obs_flat = np.array(observable_grid, dtype=np.float32).flatten()
-            obs_vec = np.concatenate([obs_flat, [waves_left]]).astype(np.float32)
-            # Prepare input for all valid actions
-            action_inputs = []
-            for i, j, t in valid_action_indices:
-                action_vec = np.array([i, j, t], dtype=np.float32)
-                obs_action = np.concatenate([obs_vec, action_vec])
-                action_inputs.append(obs_action)
-            action_inputs = torch.tensor(np.array(action_inputs), dtype=torch.float32)  # shape: (num_valid, obs_dim+3)
-            with torch.no_grad():
-                logits = model(action_inputs).squeeze(1)  # shape: (num_valid,)
-                probs = torch.softmax(logits, dim=0)
-                m = torch.distributions.Categorical(probs)
-                idx = m.sample().item()
-                i, j, type_ = valid_action_indices[idx]
-            if env.check_valid_action(i, j, 2):
-                try:
-                    env.place_structure_index(i, j, 2, tower_type=type_)
-                except:
-                    continue
-            else:
+    obs = env.get_observable_space()
+    for wave in range(500):
+        valid_action_indices = preprocess_state(env)
+        if len(valid_action_indices) == 0:
+            break
+        # Prepare input for all valid actions
+        observable_grid, waves_left = obs
+        obs_flat = np.array(observable_grid, dtype=np.float32).flatten()
+        obs_vec = np.concatenate([obs_flat, [waves_left]]).astype(np.float32)
+        action_inputs = []
+        for i, j, t in valid_action_indices:
+            action_vec = np.array([i, j, t], dtype=np.float32)
+            obs_action = np.concatenate([obs_vec, action_vec])
+            action_inputs.append(obs_action)
+        action_inputs = torch.tensor(action_inputs, dtype=torch.float32)  # shape: (num_valid, obs_dim+action_dim)
+        with torch.no_grad():
+            q_values = model(action_inputs).squeeze(1)  # shape: (num_valid,)
+            idx = torch.argmax(q_values).item()
+            i, j, t = valid_action_indices[idx]
+        if env.check_valid_action(i, j, 2):
+            try:
+                env.place_structure_index(i, j, 2, tower_type=t)
+            except:
                 continue
-            next_state, next_observation, reward, done, _ = env.step()
-            obs = env.get_observable_space()
-            total_reward += reward
-            if done:
-                break
+        next_state, next_observation, reward, done, _ = env.step()
+        obs = env.get_observable_space()
+        total_reward += reward
+        if done:
+            break
     return total_reward
 
-episode_rewards = defaultdict(list)  # episode_num -> list of rewards
-model_dir = os.path.join(os.path.dirname(__file__), "../PG_Masked4096_300episodes40_batch")
+episode_rewards = defaultdict(list)
+model_dir = os.path.join(os.path.dirname(__file__), "../SARSA4096_2000episodes40_batch")  # Adjust as needed
+
 def main(map_name=None):
     if not os.path.isdir(model_dir):
         print(f"Model directory not found: {model_dir}")
         return
 
     env = TowerDefenseGame(training_mode=False, selected_map=map_name)
-    obs_dim = env.GRID_SIZE * env.GRID_SIZE + 1  # +1 for waves_left
-    valid_action_dim = 3  # [i, j, t]
+    obs_dim = env.GRID_SIZE * env.GRID_SIZE + 1
+    action_dim = 3
 
     model_files = [f for f in os.listdir(model_dir) if f.endswith(".pt")]
     model_files.sort()
@@ -87,7 +83,7 @@ def main(map_name=None):
             episode_num = None
 
         model_path = os.path.join(model_dir, model_file)
-        reward = evaluate_model(model_path, obs_dim, valid_action_dim)
+        reward = evaluate_model(model_path, obs_dim, action_dim)
         if episode_num is not None:
             episode_rewards[episode_num].append(reward)
 
@@ -101,7 +97,6 @@ if __name__ == "__main__":
             main(file)
     # Convert to array of arrays (list of lists), sorted by episode_num
     rewards_array = [episode_rewards[ep] for ep in sorted(episode_rewards)]
-    #print(rewards_array)
 
     # Print the average reward for each episode
     episode_nums = [ep for ep in sorted(episode_rewards)]
@@ -109,7 +104,6 @@ if __name__ == "__main__":
     for idx, rewards in enumerate(rewards_array):
         avg = np.mean(rewards) if rewards else float('nan')
         avg_rewards.append(avg)
-#        print(f"Episode {episode_nums[idx]}: Average Reward = {avg}")
 
     # Plot average reward per episode (evaluation) using moving average
     plt.figure(figsize=(10, 6))
@@ -130,15 +124,11 @@ if __name__ == "__main__":
         z = np.polyfit(episode_nums, avg_rewards, 1)
         p = np.poly1d(z)
         plt.plot(episode_nums, p(episode_nums), "r--", label='Evaluation Trend Line')
-    
 
-
-    
     plt.xlabel('Episode')
     plt.ylabel('Average evaluation Reward')
-    plt.title('Policy Gradient: Average Reward per Episode (Evaluation)')
+    plt.title('SARSA: Average Reward per Episode (Evaluation)')
     plt.legend()
     plt.grid(True, linestyle='--', alpha=0.6)
     plt.tight_layout()
     plt.show()
-

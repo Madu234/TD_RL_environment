@@ -2,7 +2,7 @@ import pygame
 # from Game import TowerDefenseGame
 
 class Enemy:
-    def __init__(self, path, width, height, color, speed, cell_size, hp, armor = 0):
+    def __init__(self, path, width, height, color, speed, cell_size, hp, armor = 0, reward = 1):
         
         # Type variables
         self.width = width
@@ -11,6 +11,7 @@ class Enemy:
         self.speed = speed
         # self.type = enemy_type
         self.armor = armor
+        self.reward = reward
 
         # Path variables
 

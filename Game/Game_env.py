@@ -27,7 +27,8 @@ class TowerDefenseGame:
         self.BLUE = (0, 0, 255)
         self.GREEN = (0, 255, 0)
         self.VIOLET = (127,0,255)
-        self.training_mode = training_mode
+        #self.training_mode = training_mode
+        self.train_flag = training_mode
         self.selected_map = selected_map
 
         self.WIN = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
@@ -46,7 +47,7 @@ class TowerDefenseGame:
         self.towers = []
         self.walls = []
         #self.spawner_delay = 0
-
+        self.photo_flag = True
         self.start_point = (0, 0)
         self.end_point = (0, 9)
         self.grid[self.start_point[0]][self.start_point[1]] = "start"
@@ -135,7 +136,7 @@ class TowerDefenseGame:
         for enemy in self.enemies:
             if not enemy.is_alive():
                 #print("Enemy died, reward added")
-                self.current_reward += 1
+                self.current_reward += enemy.reward
         self.enemies = [enemy for enemy in self.enemies if enemy.is_alive()]
         #self.enemies = [enemy for enemy in self.enemies if not (enemy.cell_x, enemy.cell_y) == self.end_point]
         new_enemies = []
@@ -212,7 +213,7 @@ class TowerDefenseGame:
         self.grid = [["" for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
         # Determine folder for maps
         base_dir = os.path.dirname(__file__)
-        if self.training_mode:
+        if self.train_flag:
             folder = os.path.join(base_dir, "Maps", "Training")
         else:
             folder = os.path.join(base_dir, "Maps", "Evaluation")
@@ -325,7 +326,12 @@ class TowerDefenseGame:
         self.draw_optimal_path(self.current_optimal_path)  # Assuming self.current_optimal_path contains the optimal path
         self.draw_projectiles()
         self.draw_enemies()
+        
         pygame.display.update()
+        if (self.photo_flag):
+            # pygame.image.save(self.WIN, f"/home/madu/Desktop/Disertation_Latex_article/{os.path.splitext(self.selected_map)[0]}.png")
+            self.photo_flag = False
+
 
     def check_valid_action(self, i, j, type):
         shift = 0
@@ -386,6 +392,40 @@ class TowerDefenseGame:
                                 self.action_space[row][col] += 2**index
                         else:
                             self.action_space[row][col] += 2**index
+
+    def get_observable_space(self):
+        """
+        Returns:
+            observable_grid: 2D list with encoding:
+                0 = empty
+                1 = tower
+                2 = enemy path
+                3 = obstacle or wall
+                4 = start
+                5 = end
+            waves_left: int, number of waves left
+        """
+        observable_grid = [[0 for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
+        # Mark towers, obstacles, walls, start, and finish
+        for i in range(self.GRID_SIZE):
+            for j in range(self.GRID_SIZE):
+                if self.grid[i][j] == "tower":
+                    observable_grid[i][j] = 1
+                elif self.grid[i][j] == "wall" or self.grid[i][j] == "obstacle":
+                    observable_grid[i][j] = 3
+                elif self.grid[i][j] == "start":
+                    observable_grid[i][j] = 4
+                elif self.grid[i][j] == "finish":
+                    observable_grid[i][j] = 5
+                # else: keep as 0 (empty)
+
+        # Mark enemy path (do not overwrite towers, walls, obstacles, start, or finish)
+        for (i, j) in self.current_optimal_path:
+            if observable_grid[j][i] == 0:
+                observable_grid[j][i] = 2
+
+        waves_left = max(0, len(self.waves) - self.current_wave_index)
+        return observable_grid, waves_left
 
     def place_empty(self, row, col, structure_size):
         if structure_size == 1:  # 1x1 structure
